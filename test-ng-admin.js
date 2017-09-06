@@ -10,14 +10,24 @@
 
         ENV.admin = admin
 
-        function addEntity(name, fields) {
+        function addEntity(name, fields, idToken) {
             const entity = nga.entity(name).updateMethod('patch')
             const fieldsWithID = fields.slice()
-            fieldsWithID.unshift(nga.field('id', 'number'))
+
+            if (!idToken) {
+                fieldsWithID.unshift(nga.field('id', 'number'))
+            }
 
             entity.listView().fields(fieldsWithID)
             entity.editionView().fields(fields)
             entity.creationView().fields(fields)
+
+            // at last
+            if (idToken) {
+                let id = entity.listView().getField(idToken)
+                id.isDetailLink(true)
+                entity.identifier(id)
+            }
 
             admin.addEntity(entity)
             return entity
@@ -37,8 +47,8 @@
         const user = addEntity("users", [
             nga.field('name', 'string'),
             nga.field('password', 'string'),
-        ])
-
+        ], "name")
+        window.u = user
 
         const post = addEntity("posts", [
             nga.field('title', 'string'),
@@ -66,9 +76,9 @@
                     headers["Accept"] = "application/vnd.pgrst.object+json"
                     //params["id"] = `eq.${pattern.exec(url)[1]}`
                     idKey = ENV.admin.getEntity(what).identifier().name()
-                    idValue = pattern.exec(url)[1]
+                    idValue = decodeURI(pattern.exec(url)[1])
                     params[idKey] = `eq.${idValue}`
-                    params.___ = idValue.length + 1
+                    params.___ = true
                     break
                 case 'getList':
                     headers['Range-Unit'] = what
@@ -97,14 +107,12 @@
         http.interceptors.push(function() {
             return {
                 request: function(config) {
+                    console.log(config)
 
-                    if (config.params) {
-                        let suffixLength = config.params.___
+                    if (config.params && config.params.___) {
                         delete config.params.___
-                        if (suffixLength) {
-                            let url = config.url
-                            config.url = url.slice(0, url.length - suffixLength)
-                        }
+                        let url = config.url
+                        config.url = url.slice(0, url.lastIndexOf("/"))
                     }
 
                     return config
