@@ -24,7 +24,9 @@
 
             // at last
             if (idToken) {
-                let id = entity.listView().getField(idToken)
+                let lv = entity.listView()
+                let id = lv.getField(idToken)
+                lv.sortField(idToken)
                 id.isDetailLink(true)
                 entity.identifier(id)
             }
