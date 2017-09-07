@@ -23,6 +23,7 @@
             entity.creationView().fields(fields)
 
             // at last
+            // sortField, isDetailLink, identifier
             if (idToken) {
                 let lv = entity.listView()
                 let id = lv.getField(idToken)
@@ -57,7 +58,7 @@
             nga.field('content', 'wysiwyg'),
             nga.field('user', 'reference')
             .targetEntity(user)
-            .targetField(nga.field('name'))
+            //.targetField(nga.field('name'))
             ,
         ])
 
@@ -109,7 +110,6 @@
         http.interceptors.push(function() {
             return {
                 request: function(config) {
-                    console.log(config)
 
                     if (config.params && config.params.___) {
                         delete config.params.___
