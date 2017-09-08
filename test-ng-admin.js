@@ -5,7 +5,7 @@
 
     app.config(['NgAdminConfigurationProvider', function (nga) {
         // create an admin application
-        const admin = nga.application('My First Admin')
+        const admin = nga.application('test')
             .baseApiUrl('/api/')
 
         ENV.admin = admin
@@ -18,7 +18,7 @@
                 fieldsWithID.unshift(nga.field('id', 'number').pinned(true))
             }
 
-            entity.listView().fields(fieldsWithID)
+            entity.listView().fields(fieldsWithID.slice(0, 5))
                 .filters(fieldsWithID)
                 .perPage(10)
                 //.batchActions(['delete'])
@@ -65,6 +65,25 @@
             ,
         ])
 
+        const mapdata = addEntity("mapdata", [
+            nga.field("nid"),
+            nga.field("title"),
+            nga.field("location_type"),
+            nga.field("province_state"),
+            nga.field("city"),
+            nga.field("address_line_1"),
+            nga.field("address_line_2"),
+            nga.field("latitude"),
+            nga.field("longitude"),
+            nga.field("hours"),
+            nga.field("tel"),
+            nga.field("otherinfo", "text"),
+            nga.field("location_id"),
+            nga.field("citycode"),
+            nga.field("locked"),
+            nga.field("lockid"),
+            nga.field("psw"),
+        ])
 
         nga.configure(admin)
     }])
@@ -93,6 +112,7 @@
                     delete params._filters
                     for (let key in filters) {
                         let value = filters[key]
+                        if (value == null) continue
                         params[key] = `eq.${value}`
                     }
 
