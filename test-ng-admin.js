@@ -15,10 +15,13 @@
             const fieldsWithID = fields.slice()
 
             if (!idToken) {
-                fieldsWithID.unshift(nga.field('id', 'number'))
+                fieldsWithID.unshift(nga.field('id', 'number').pinned(true))
             }
 
             entity.listView().fields(fieldsWithID)
+                .filters(fieldsWithID)
+                .perPage(10)
+                //.batchActions(['delete'])
             entity.editionView().fields(fields)
             entity.creationView().fields(fields)
 
@@ -58,7 +61,7 @@
             nga.field('content', 'wysiwyg'),
             nga.field('user', 'reference')
             .targetEntity(user)
-            //.targetField(nga.field('name'))
+            .targetField(nga.field('name'))
             ,
         ])
 
@@ -84,7 +87,16 @@
                     params.___ = true
                     break
                 case 'getList':
-                    headers['Range-Unit'] = what
+                    headers['Prefer'] = "count=exact"
+
+                    let filters = params._filters
+                    delete params._filters
+                    for (let key in filters) {
+                        let value = filters[key]
+                        params[key] = `eq.${value}`
+                    }
+
+                    //headers['Range-Unit'] = what
                     headers['Range'] = ((params._page - 1) * params._perPage) + '-' + (params._page * params._perPage - 1)
                     delete params._page
                     delete params._perPage
