@@ -62,6 +62,19 @@
             nga.field('user', 'reference')
             .targetEntity(user)
             .targetField(nga.field('name'))
+            .label("User Name")
+            .perPage(6)
+            .remoteComplete(true, {
+                refreshDelay: 300,
+                searchQuery: (search) => {
+                    return {
+                        name: {
+                            operator: "like",
+                            value: `*${search}*`,
+                        },
+                    }
+                },
+            })
             ,
         ])
 
@@ -110,10 +123,20 @@
 
                     let filters = params._filters
                     delete params._filters
-                    for (let key in filters) {
-                        let value = filters[key]
-                        if (value == null) continue
-                        params[key] = `eq.${value}`
+                    for (let k in filters) {
+                        let v = filters[k]
+                        if (v != null) {
+                            if (v.hasOwnProperty("operator") && v.hasOwnProperty("value")) {
+                                // v likes: {operator: xxx, value: zzzz}
+                                params[k] = `${v.operator}.${v.value}`
+                                delete headers['Prefer']  // request would faster
+                            } else {
+                                if (v instanceof Date) {
+                                    v = v.toISOString()
+                                }
+                                params[k] = `eq.${v}`
+                            }
+                        }
                     }
 
                     //headers['Range-Unit'] = what
