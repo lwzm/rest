@@ -6,7 +6,6 @@
 (function (window, angular) {
     const app = angular.module('myApp', ['ng-admin'])
     const ENV = {}
-    const idPattern = RegExp("/([^/]+)$")
 
     app.config(['NgAdminConfigurationProvider', function (nga) {
         // create an admin application
@@ -153,11 +152,10 @@
                 case 'patch':
                 case 'remove':
                     headers["Accept"] = "application/vnd.pgrst.object+json"
-                    //params["id"] = `eq.${idPattern.exec(url)[1]}`
-                    idKey = ENV.admin.getEntity(what).identifier().name()
-                    idValue = decodeURI(idPattern.exec(url)[1])
+                    let idKey = ENV.admin.getEntity(what).identifier().name()
+                    let idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                     params[idKey] = `eq.${idValue}`
-                    params.___ = true
+                    params.___strip_id_todo = true
                     break
                 case 'getList':
                     headers['Prefer'] = "count=exact"
@@ -205,8 +203,8 @@
             return {
                 request: function(config) {
 
-                    if (config.params && config.params.___) {
-                        delete config.params.___
+                    if (config.params && config.params.___strip_id_todo) {
+                        delete config.params.___strip_id_todo
                         let url = config.url
                         config.url = url.slice(0, url.lastIndexOf("/"))
                     }
