@@ -1,7 +1,12 @@
+/*
+ * https://ng-admin-book.marmelab.com/doc/reference/Field.html#field-configuration
+ * https://postgrest.com/en/v4.1/api.html#horizontal-filtering-rows
+ */
+
 (function (window, angular) {
     const app = angular.module('myApp', ['ng-admin'])
     const ENV = {}
-    const pattern = RegExp("/([^/]+)$")
+    const idPattern = RegExp("/([^/]+)$")
 
     app.config(['NgAdminConfigurationProvider', function (nga) {
         // create an admin application
@@ -13,13 +18,52 @@
         function addEntity(name, fields, idToken) {
             const entity = nga.entity(name).updateMethod('patch')
             const fieldsWithID = fields.slice()
+            const extraFilters = []
+
+            for (let field of fields) {
+                let name = field.name()
+                let type = field.type()
+
+                field.label(name)  // patch
+                
+                switch (type) {
+                    case 'number':
+                    case 'float':
+                    case 'date':
+                    case 'datetime':
+                        extraFilters.push(
+                            nga.field(`${name}...gte`, type)
+                            .label(`${name} >=`)
+                        )
+                        extraFilters.push(
+                            nga.field(`${name}...lte`, type)
+                            .label(`${name} <=`)
+                        )
+                        break;
+                    case 'string':
+                    case 'text':
+                    case 'wysiwyg':
+                    case 'email':
+                        extraFilters.push(
+                            nga.field(`${name}...like`, type)
+                            .label(`${name} ~`)
+                        )
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             if (!idToken) {
-                fieldsWithID.unshift(nga.field('id', 'number').pinned(true))
+                fieldsWithID.unshift(
+                    nga.field('id', 'number')
+                    .label("ID")
+                    .pinned(true)
+                )
             }
 
             entity.listView().fields(fieldsWithID.slice(0, 5))
-                .filters(fieldsWithID)
+                .filters(fieldsWithID.concat(extraFilters))
                 .perPage(10)
                 //.batchActions(['delete'])
             entity.editionView().fields(fields)
@@ -65,15 +109,12 @@
             .label("User Name")
             .perPage(6)
             .remoteComplete(true, {
-                refreshDelay: 300,
                 searchQuery: (search) => {
                     return {
-                        name: {
-                            operator: "like",
-                            value: `*${search}*`,
-                        },
+                        'name...like': search,
                     }
                 },
+                refreshDelay: 300,
             })
             ,
         ])
@@ -112,9 +153,9 @@
                 case 'patch':
                 case 'remove':
                     headers["Accept"] = "application/vnd.pgrst.object+json"
-                    //params["id"] = `eq.${pattern.exec(url)[1]}`
+                    //params["id"] = `eq.${idPattern.exec(url)[1]}`
                     idKey = ENV.admin.getEntity(what).identifier().name()
-                    idValue = decodeURI(pattern.exec(url)[1])
+                    idValue = decodeURI(idPattern.exec(url)[1])
                     params[idKey] = `eq.${idValue}`
                     params.___ = true
                     break
@@ -123,19 +164,17 @@
 
                     let filters = params._filters
                     delete params._filters
-                    for (let k in filters) {
-                        let v = filters[k]
+
+                    for (let key in filters) {
+                        let v = filters[key]
                         if (v != null) {
-                            if (v.hasOwnProperty("operator") && v.hasOwnProperty("value")) {
-                                // v likes: {operator: xxx, value: zzzz}
-                                params[k] = `${v.operator}.${v.value}`
-                                delete headers['Prefer']  // request would faster
-                            } else {
-                                if (v instanceof Date) {
-                                    v = v.toISOString()
-                                }
-                                params[k] = `eq.${v}`
+                            let _ = key.split('...')
+                            let k = _[0]
+                            let operator = _[1] || 'eq'
+                            if (v instanceof Date) {
+                                v = v.toISOString()
                             }
+                            params[k] = `${operator}.${v}`
                         }
                     }
 
