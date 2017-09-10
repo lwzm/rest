@@ -17,7 +17,7 @@
         function addEntity(name, fields, idToken) {
             const entity = nga.entity(name).updateMethod('patch')
             const fieldsWithID = fields.slice()
-            const extraFilters = []
+            const filters = []
 
             for (let field of fields) {
                 let name = field.name()
@@ -30,11 +30,12 @@
                     case 'float':
                     case 'date':
                     case 'datetime':
-                        extraFilters.push(
+                        filters.push(field)
+                        filters.push(
                             nga.field(`${name}...gte`, type)
                             .label(`${name} >=`)
                         )
-                        extraFilters.push(
+                        filters.push(
                             nga.field(`${name}...lte`, type)
                             .label(`${name} <=`)
                         )
@@ -43,28 +44,29 @@
                     case 'text':
                     case 'wysiwyg':
                     case 'email':
-                        extraFilters.push(
+                        filters.push(
                             nga.field(`${name}...like`, type)
                             .label(`${name} ~`)
                         )
                         break;
                     default:
+                        filters.push(field)
                         break;
                 }
             }
 
             if (!idToken) {
-                fieldsWithID.unshift(
-                    nga.field('id', 'number')
+                let id = nga.field('id', 'number')
                     .label("ID")
                     .pinned(true)
-                )
+                fieldsWithID.unshift(id)
+                filters.unshift(id)
             }
 
-            entity.listView().fields(fieldsWithID.slice(0, 5))
-                .filters(fieldsWithID.concat(extraFilters))
+            entity.listView().fields(fieldsWithID.slice(0, 6))
+                .filters(filters)
                 .perPage(10)
-                //.batchActions(['delete'])
+                .exportFields(fieldsWithID)
             entity.editionView().fields(fields)
             entity.creationView().fields(fields)
 
@@ -106,11 +108,11 @@
             .targetEntity(user)
             .targetField(nga.field('name'))
             .label("User Name")
-            .perPage(6)
+            .perPage(10)
             .remoteComplete(true, {
                 searchQuery: (search) => {
                     return {
-                        'name...like': search,
+                        'name...like': `*${search}*`,
                     }
                 },
                 refreshDelay: 300,
