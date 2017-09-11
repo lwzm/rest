@@ -56,7 +56,7 @@
             }
 
             if (!idToken) {
-                let id = nga.field('id', 'number')
+                let id = nga.field('id')
                     .label("ID")
                     .pinned(true)
                 fieldsWithID.unshift(id)
