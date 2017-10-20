@@ -101,6 +101,43 @@
         ], "name")
         window.u = user
 
+        const zone = addEntity("zone", [
+            nga.field('name', 'string'),
+            nga.field('beds', 'number'),
+        ])
+
+        const zoneReference = nga.field('zone', 'reference')
+                                .targetEntity(zone)
+                                .targetField(nga.field('name'))
+
+        const doctor = addEntity("doctor", [
+            zoneReference,
+            nga.field('info', 'json'),
+        ])
+
+        const patient = addEntity("patient", [
+            nga.field('bed', 'number'),
+            nga.field('state', 'string'),
+            zoneReference,
+            nga.field('info', 'json'),
+        ])
+
+        const log = addEntity("log", [
+            nga.field('datetime', 'datetime'),
+            nga.field('key', 'string'),
+            nga.field('patient', 'reference')
+                .targetEntity(patient)
+                .targetField(nga.field('name'))
+            ,
+            nga.field('info', 'json'),
+        ])
+
+        const cfg = addEntity("cfg", [
+            nga.field('k', 'string'),
+            nga.field('v', 'json'),
+            nga.field('comment', 'text'),
+        ], "k")
+
         const post = addEntity("posts", [
             nga.field('title', 'string'),
             nga.field('content', 'wysiwyg'),
