@@ -13,6 +13,7 @@ CREATE TABLE api.zone (
 
 CREATE TABLE api.doctor (
     id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
     zone INTEGER REFERENCES api.zone,
     info JSONB
 );

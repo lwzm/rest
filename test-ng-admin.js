@@ -112,6 +112,7 @@
 
         const doctor = addEntity("doctor", [
             zoneReference,
+            nga.field('name', 'string'),
             nga.field('info', 'json'),
         ])
 
