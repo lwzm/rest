@@ -19,20 +19,18 @@
             const fieldsWithID = fields.slice()
             const filters = []
 
-            for (let field of fields) {
-                let name = field.name()
-                let type = field.type()
+            for (const field of fields) {
+                const name = field.name()
+                const type = field.type()
 
                 field.label(name)  // patch it, prefer raw rather than capitalized
 
-                filterDefault = nga.field(name, type).label(`${name} ==`)
-                
                 switch (type) {
                     case 'number':
                     case 'float':
                     case 'date':
                     case 'datetime':
-                        filters.push(filterDefault)
+                        filters.push(field)
                         filters.push(
                             nga.field(`${name}...gte`, type)
                                 .label(`${name} >=`)
@@ -52,7 +50,7 @@
                         )
                         break;
                     default:
-                        filters.push(filterDefault)
+                        filters.push(field)
                         break;
                 }
             }
@@ -146,11 +144,11 @@
             nga.field('info', 'json'),
         ])
 
-        const cfg = addEntity("cfg", [
-            nga.field('k', 'string'),
-            nga.field('v', 'json'),
-            nga.field('comment', 'text'),
-        ], "k")
+        //const cfg = addEntity("cfg", [
+        //    nga.field('k', 'string'),
+        //    nga.field('v', 'json'),
+        //    nga.field('comment', 'text'),
+        //], "k")
 
         const post = addEntity("posts", [
             nga.field('title', 'string'),
@@ -160,7 +158,7 @@
                 .targetEntity(user)
                 .targetField(nga.field('name'))
                 .label("User Name")
-                .perPage(10)
+                .perPage(5)
                 .remoteComplete(true, {
                     searchQuery: (search) => {
                         return {
