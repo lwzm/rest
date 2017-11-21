@@ -23,21 +23,23 @@
                 let name = field.name()
                 let type = field.type()
 
-                field.label(name)  // patch
+                field.label(name)  // patch it, prefer raw rather than capitalized
+
+                filterDefault = nga.field(name, type).label(`${name} ==`)
                 
                 switch (type) {
                     case 'number':
                     case 'float':
                     case 'date':
                     case 'datetime':
-                        filters.push(field)
+                        filters.push(filterDefault)
                         filters.push(
                             nga.field(`${name}...gte`, type)
-                            .label(`${name} >=`)
+                                .label(`${name} >=`)
                         )
                         filters.push(
                             nga.field(`${name}...lte`, type)
-                            .label(`${name} <=`)
+                                .label(`${name} <=`)
                         )
                         break;
                     case 'string':
@@ -46,11 +48,11 @@
                     case 'email':
                         filters.push(
                             nga.field(`${name}...like`, type)
-                            .label(`${name} ~`)
+                                .label(`${name} ~=`)
                         )
                         break;
                     default:
-                        filters.push(field)
+                        filters.push(filterDefault)
                         break;
                 }
             }
@@ -58,14 +60,14 @@
             if (!idToken) {
                 let id = nga.field('id')
                     .label("ID")
-                    .pinned(true)
+                    .pinned(true)  // place ID-searching at top-right corner forever
                 fieldsWithID.unshift(id)
                 filters.unshift(id)
             }
 
             entity.listView().fields(fieldsWithID.slice(0, 6))
                 .filters(filters)
-                .perPage(10)
+                .perPage(10)  // 10 lines is height enough, i hate scrolling
                 .exportFields(fieldsWithID)
             entity.editionView().fields(fields)
             entity.creationView().fields(fields)
@@ -99,16 +101,26 @@
             nga.field('name', 'string'),
             nga.field('password', 'string'),
         ], "name")
-        window.u = user
 
         const zone = addEntity("zone", [
             nga.field('name', 'string'),
             nga.field('beds', 'number'),
         ])
 
+        const targetFiledID = nga.field('id')
+
         const zoneReference = nga.field('zone', 'reference')
                                 .targetEntity(zone)
                                 .targetField(nga.field('name'))
+
+        const remoteCompleteID = {
+            searchQuery: (search) => {
+                return {
+                    'id...eq': search,
+                }
+            },
+            refreshDelay: 300,
+        }
 
         const doctor = addEntity("doctor", [
             zoneReference,
@@ -128,7 +140,8 @@
             nga.field('key', 'string'),
             nga.field('patient', 'reference')
                 .targetEntity(patient)
-                .targetField(nga.field('name'))
+                .targetField(targetFiledID)
+                .perPage(100)
             ,
             nga.field('info', 'json'),
         ])
@@ -142,20 +155,27 @@
         const post = addEntity("posts", [
             nga.field('title', 'string'),
             nga.field('content', 'wysiwyg'),
+            //nga.field('user', 'string'),
             nga.field('user', 'reference')
-            .targetEntity(user)
-            .targetField(nga.field('name'))
-            .label("User Name")
-            .perPage(10)
-            .remoteComplete(true, {
-                searchQuery: (search) => {
-                    return {
-                        'name...like': `*${search}*`,
-                    }
-                },
-                refreshDelay: 300,
-            })
+                .targetEntity(user)
+                .targetField(nga.field('name'))
+                .label("User Name")
+                .perPage(10)
+                .remoteComplete(true, {
+                    searchQuery: (search) => {
+                        return {
+                            'name...like': `*${search}*`,
+                        }
+                    },
+                    refreshDelay: 300,
+                })
             ,
+            //nga.field('d', 'reference')
+            //    .targetEntity(doctor)
+            //    .targetField(targetFiledID)
+            //    .perPage(2)
+            //    .remoteComplete(true, remoteCompleteID)
+            //,
         ])
 
         const mapdata = addEntity("mapdata", [
