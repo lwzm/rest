@@ -14,12 +14,22 @@
 
         ENV.admin = admin
 
-        function addEntity(name, fields, idToken) {
+        function addEntity(name, opts) {
+            const {fields1, fields2, idToken} = opts
             const entity = nga.entity(name).updateMethod('patch')
-            const fieldsWithID = fields.slice()
             const filters = []
 
-            for (const field of fields) {
+            if (!idToken) {
+                let id = nga.field('id')
+                    .label("ID")
+                    .pinned(true)  // place ID-searching at top-right corner forever
+                fields1.unshift(id)
+                filters.unshift(id)
+            }
+
+            const fields = fields1.concat(fields2 || [])
+
+            for (const field of fields1) {  // or `field of fields`
                 const name = field.name()
                 const type = field.type()
 
@@ -55,27 +65,20 @@
                 }
             }
 
-            if (!idToken) {
-                let id = nga.field('id')
-                    .label("ID")
-                    .pinned(true)  // place ID-searching at top-right corner forever
-                fieldsWithID.unshift(id)
-                filters.unshift(id)
-            }
 
-            entity.listView().fields(fieldsWithID.slice(0, 6))
+            entity.listView().fields(fields1)
                 .filters(filters)
                 .perPage(10)  // 10 lines is height enough, i hate scrolling
-                .exportFields(fieldsWithID)
+                .exportFields(fields1)
             entity.editionView().fields(fields)
             entity.creationView().fields(fields)
 
             // at last
             // sortField, isDetailLink, identifier
             if (idToken) {
-                let lv = entity.listView()
-                let id = lv.getField(idToken)
-                lv.sortField(idToken)
+                let table = entity.listView()
+                let id = table.getField(idToken)
+                table.sortField(idToken)
                 id.isDetailLink(true)
                 entity.identifier(id)
             }
@@ -85,25 +88,34 @@
         }
 
 
-        const todo = addEntity("todos", [
-            nga.field('task', 'text').isDetailLink(true).sortable(false),
-            nga.field('done', 'boolean').choices([
-                { value: false, label: 'false'},
-                { value: true, label: 'true'},
-            ]),
-            nga.field('due', 'datetime'),
-            nga.field('others', 'json'),
-        ])
+        const todo = addEntity("todos", {
+            fields1: [
+                nga.field('task', 'text').isDetailLink(true).sortable(false),
+                nga.field('done', 'boolean').choices([
+                    { value: false, label: 'false'},
+                    { value: true, label: 'true'},
+                ]),
+                nga.field('due', 'datetime'),
+            ],
+            fields2: [
+                nga.field('others', 'json'),
+            ],
+        })
 
-        const user = addEntity("users", [
-            nga.field('name', 'string'),
-            nga.field('password', 'string'),
-        ], "name")
+        const user = addEntity("users", {
+            idToken: "name",
+            fields1: [
+                nga.field('name', 'string'),
+                nga.field('password', 'string'),
+            ],
+        })
 
-        const zone = addEntity("zone", [
-            nga.field('name', 'string'),
-            nga.field('beds', 'number'),
-        ])
+        const zone = addEntity("zone", {
+            fields1: [
+                nga.field('name', 'string'),
+                nga.field('beds', 'number'),
+            ],
+        })
 
         const targetFiledID = nga.field('id')
 
@@ -120,29 +132,35 @@
             refreshDelay: 300,
         }
 
-        const doctor = addEntity("doctor", [
-            zoneReference,
-            nga.field('name', 'string'),
-            nga.field('info', 'json'),
-        ])
+        const doctor = addEntity("doctor", {
+            fields1: [
+                zoneReference,
+                nga.field('name', 'string'),
+                nga.field('info', 'json'),
+            ],
+        })
 
-        const patient = addEntity("patient", [
-            nga.field('bed', 'number'),
-            nga.field('state', 'string'),
-            zoneReference,
-            nga.field('info', 'json'),
-        ])
+        const patient = addEntity("patient", {
+            fields1: [
+                nga.field('bed', 'number'),
+                nga.field('state', 'string'),
+                zoneReference,
+                nga.field('info', 'json'),
+            ],
+        })
 
-        const log = addEntity("log", [
-            nga.field('datetime', 'datetime'),
-            nga.field('key', 'string'),
-            nga.field('patient', 'reference')
-                .targetEntity(patient)
-                .targetField(targetFiledID)
-                .perPage(100)
-            ,
-            nga.field('info', 'json'),
-        ])
+        const log = addEntity("log", {
+            fields1: [
+                nga.field('datetime', 'datetime'),
+                nga.field('key', 'string'),
+                nga.field('patient', 'reference')
+                    .targetEntity(patient)
+                    .targetField(targetFiledID)
+                    .perPage(100)
+                ,
+                nga.field('info', 'json'),
+            ],
+        })
 
         //const cfg = addEntity("cfg", [
         //    nga.field('k', 'string'),
@@ -150,51 +168,57 @@
         //    nga.field('comment', 'text'),
         //], "k")
 
-        const post = addEntity("posts", [
-            nga.field('title', 'string'),
-            nga.field('content', 'wysiwyg'),
-            //nga.field('user', 'string'),
-            nga.field('user', 'reference')
-                .targetEntity(user)
-                .targetField(nga.field('name'))
-                .label("User Name")
-                .perPage(5)
-                .remoteComplete(true, {
-                    searchQuery: (search) => {
-                        return {
-                            'name...like': `*${search}*`,
-                        }
-                    },
-                    refreshDelay: 300,
-                })
-            ,
-            //nga.field('d', 'reference')
-            //    .targetEntity(doctor)
-            //    .targetField(targetFiledID)
-            //    .perPage(2)
-            //    .remoteComplete(true, remoteCompleteID)
-            //,
-        ])
+        const post = addEntity("posts", {
+            fields1: [
+                nga.field('title', 'string'),
+                nga.field('content', 'wysiwyg'),
+                //nga.field('user', 'string'),
+                nga.field('user', 'reference')
+                    .targetEntity(user)
+                    .targetField(nga.field('name'))
+                    .label("User Name")
+                    .perPage(5)
+                    .remoteComplete(true, {
+                        searchQuery: (search) => {
+                            return {
+                                'name...like': `*${search}*`,
+                            }
+                        },
+                        refreshDelay: 300,
+                    })
+                ,
+                //nga.field('d', 'reference')
+                //    .targetEntity(doctor)
+                //    .targetField(targetFiledID)
+                //    .perPage(2)
+                //    .remoteComplete(true, remoteCompleteID)
+                //,
+            ],
+        })
 
-        const mapdata = addEntity("mapdata", [
-            nga.field("nid"),
-            nga.field("title"),
-            nga.field("location_type"),
-            nga.field("province_state"),
-            nga.field("city"),
-            nga.field("address_line_1"),
-            nga.field("address_line_2"),
-            nga.field("latitude"),
-            nga.field("longitude"),
-            nga.field("hours"),
-            nga.field("tel"),
-            nga.field("otherinfo", "text"),
-            nga.field("location_id"),
-            nga.field("citycode"),
-            nga.field("locked"),
-            nga.field("lockid"),
-            nga.field("psw"),
-        ])
+        const mapdata = addEntity("mapdata", {
+            fields1: [
+                nga.field("nid"),
+                nga.field("title"),
+                nga.field("location_type"),
+                nga.field("province_state"),
+                nga.field("city"),
+            ],
+            fields2: [
+                nga.field("address_line_1"),
+                nga.field("address_line_2"),
+                nga.field("latitude"),
+                nga.field("longitude"),
+                nga.field("hours"),
+                nga.field("tel"),
+                nga.field("otherinfo", "text"),
+                nga.field("location_id"),
+                nga.field("citycode"),
+                nga.field("locked"),
+                nga.field("lockid"),
+                nga.field("psw"),
+            ],
+        })
 
         nga.configure(admin)
     }])
