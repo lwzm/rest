@@ -259,7 +259,9 @@
                     }
 
                     //headers['Range-Unit'] = what
-                    headers['Range'] = ((params._page - 1) * params._perPage) + '-' + (params._page * params._perPage - 1)
+                    const p = params._page
+                    const u = params._perPage
+                    headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
                     delete params._page
                     delete params._perPage
                     if (params._sortField) {
