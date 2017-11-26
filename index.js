@@ -2,24 +2,94 @@ import 'babel-polyfill'
 import chunk from 'lodash/map'
 
 const app = angular.module('myApp', ['ng-admin'])
-const ENV = {}
 
 //console.log(async () => 1)
 
-app.config(['NgAdminConfigurationProvider', function (nga) {
+
+app.config(['NgAdminConfigurationProvider', "RestangularProvider", "$httpProvider", (nga, rest, http) => {
     // create an admin application
     const admin = nga.application('test')
         .baseApiUrl('/api/')
 
-    ENV.admin = admin
+    nga.configure(admin)
 
-    function addEntity(name, opts) {
+    rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
+        headers = headers || {}
+
+        switch (operation) {
+            case 'get':
+            case 'patch':
+            case 'remove':
+                headers["Accept"] = "application/vnd.pgrst.object+json"
+                const idKey = admin.getEntity(what).identifier().name()
+                const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
+                params[idKey] = `eq.${idValue}`
+                params.___strip_id_todo = true
+                break
+            case 'getList':
+                headers['Prefer'] = "count=exact"
+
+                const filters = params._filters
+                delete params._filters
+
+                for (const key in filters) {
+                    let v = filters[key]
+                    if (v != null) {
+                        const _ = key.split('...')
+                        const k = _[0]
+                        const operator = _[1] || 'eq'
+                        if (v instanceof Date) {
+                            v = v.toISOString()
+                        }
+                        params[k] = `${operator}.${v}`
+                    }
+                }
+
+                //headers['Range-Unit'] = what
+                const p = params._page
+                const u = params._perPage
+                headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
+                delete params._page
+                delete params._perPage
+                if (params._sortField) {
+                    params.order = params._sortField + '.' + params._sortDir.toLowerCase()
+                    delete params._sortField
+                    delete params._sortDir
+                }
+                break
+        }
+    })
+
+    rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
+        switch (operation) {
+            case 'getList':
+                response.totalCount = response.headers('Content-Range').split('/')[1]
+                break
+        }
+        return data
+    })
+
+    const myInterceptor = {
+        request: (config) => {
+            if (config.params && config.params.___strip_id_todo) {
+                delete config.params.___strip_id_todo
+                const url = config.url
+                config.url = url.slice(0, url.lastIndexOf("/"))
+            }
+            return config
+        },
+    }
+
+    http.interceptors.push(() => myInterceptor)
+
+
+    const addEntity = (name, opts) => {
         const {fields1, fields2, idToken} = opts
         const entity = nga.entity(name).updateMethod('patch')
         const filters = []
 
         if (!idToken) {
-            let id = nga.field('id')
+            const id = nga.field('id')
                 .label("ID")
                 .pinned(true)  // place ID-searching at top-right corner forever
             fields1.unshift(id)
@@ -75,8 +145,8 @@ app.config(['NgAdminConfigurationProvider', function (nga) {
         // at last
         // sortField, isDetailLink, identifier
         if (idToken) {
-            let table = entity.listView()
-            let id = table.getField(idToken)
+            const table = entity.listView()
+            const id = table.getField(idToken)
             table.sortField(idToken)
             id.isDetailLink(true)
             entity.identifier(id)
@@ -86,6 +156,11 @@ app.config(['NgAdminConfigurationProvider', function (nga) {
         return entity
     }
 
+
+    /*
+     * append at here
+     * ...
+     */
 
     const todo = addEntity("todos", {
         fields1: [
@@ -219,82 +294,10 @@ app.config(['NgAdminConfigurationProvider', function (nga) {
         ],
     })
 
-    nga.configure(admin)
-}])
 
 
-app.config(['NgAdminConfigurationProvider', "RestangularProvider", "$httpProvider", function(nga, rest, http) {
-    rest.addFullRequestInterceptor(function(element, operation, what, url, headers, params, httpConfig) {
-        headers = headers || {}
-        //console.log(arguments)
+    // ...
 
-        switch (operation) {
-            case 'get':
-            case 'patch':
-            case 'remove':
-                headers["Accept"] = "application/vnd.pgrst.object+json"
-                let idKey = ENV.admin.getEntity(what).identifier().name()
-                let idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
-                params[idKey] = `eq.${idValue}`
-                params.___strip_id_todo = true
-                break
-            case 'getList':
-                headers['Prefer'] = "count=exact"
 
-                let filters = params._filters
-                delete params._filters
-
-                for (let key in filters) {
-                    let v = filters[key]
-                    if (v != null) {
-                        let _ = key.split('...')
-                        let k = _[0]
-                        let operator = _[1] || 'eq'
-                        if (v instanceof Date) {
-                            v = v.toISOString()
-                        }
-                        params[k] = `${operator}.${v}`
-                    }
-                }
-
-                //headers['Range-Unit'] = what
-                const p = params._page
-                const u = params._perPage
-                headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
-                delete params._page
-                delete params._perPage
-                if (params._sortField) {
-                    params.order = params._sortField + '.' + params._sortDir.toLowerCase()
-                    delete params._sortField
-                    delete params._sortDir
-                }
-                break
-        }
-    })
-
-    rest.addResponseInterceptor(function(data, operation, what, url, response, deferred) {
-        switch (operation) {
-            case 'getList':
-                response.totalCount = response.headers('Content-Range').split('/')[1]
-                break
-        }
-
-        return data
-    })
-
-    http.interceptors.push(function() {
-        return {
-            request: function(config) {
-
-                if (config.params && config.params.___strip_id_todo) {
-                    delete config.params.___strip_id_todo
-                    let url = config.url
-                    config.url = url.slice(0, url.lastIndexOf("/"))
-                }
-
-                return config
-            },
-        }
-    })
 }])
 
