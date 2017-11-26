@@ -5,8 +5,23 @@ const app = angular.module('myApp', ['ng-admin'])
 
 //console.log(async () => 1)
 
+app.config(["$httpProvider", (http) => {
+    const myInterceptor = {
+        request: (config) => {
+            if (config.params && config.params.___strip_id_todo) {
+                delete config.params.___strip_id_todo
+                const url = config.url
+                config.url = url.slice(0, url.lastIndexOf("/"))
+            }
+            return config
+        },
+    }
 
-app.config(['NgAdminConfigurationProvider', "RestangularProvider", "$httpProvider", (nga, rest, http) => {
+    http.interceptors.push(() => myInterceptor)
+}])
+
+
+app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) => {
     // create an admin application
     const admin = nga.application('test')
         .baseApiUrl('/api/')
@@ -69,18 +84,6 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", "$httpProvide
         return data
     })
 
-    const myInterceptor = {
-        request: (config) => {
-            if (config.params && config.params.___strip_id_todo) {
-                delete config.params.___strip_id_todo
-                const url = config.url
-                config.url = url.slice(0, url.lastIndexOf("/"))
-            }
-            return config
-        },
-    }
-
-    http.interceptors.push(() => myInterceptor)
 
 
     const addEntity = (name, opts) => {
