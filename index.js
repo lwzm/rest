@@ -23,7 +23,7 @@ app.config(["$httpProvider", (http) => {
 
 app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) => {
     // create an admin application
-    const admin = nga.application('test')
+    const admin = nga.application('test', false)
         .baseApiUrl('/api/')
 
     nga.configure(admin)
