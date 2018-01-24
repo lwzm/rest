@@ -27,7 +27,6 @@ CREATE TABLE api.uu (
 );
 
 
-grant usage on schema api to web_anon;
 grant all on api.t to web_anon;
 grant all on api.u to web_anon;
 grant all on api.uu to web_anon;
