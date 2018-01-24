@@ -2,7 +2,11 @@
 const path = require('path')
 
 module.exports = {
-    entry: './auto.js',
+    entry: [
+        'babel-polyfill',
+        'whatwg-fetch',   /* https://github.com/github/fetch */
+        './auto.js',
+    ],
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),

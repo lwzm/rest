@@ -1,11 +1,16 @@
+/*
+ * https://www.cnblogs.com/princesong/p/6728250.html
 import 'babel-polyfill'
-import axios from 'axios'
+import 'whatwg-fetch'
+*/
 
 const app = angular.module('myApp', ['ng-admin'])
 
 const test_async = async () => {
-    let resp = await axios.get("http://ip.tyio.net")
-    console.log(resp)
+    let resp = await fetch("http://ip.tyio.net")
+    let txt = await resp.text()
+    console.log(txt)
+    alert(txt)
 }
 test_async()
 
