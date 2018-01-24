@@ -6,13 +6,14 @@ import 'whatwg-fetch'
 
 const app = angular.module('myApp', ['ng-admin'])
 
-const test_async = async () => {
-    let resp = await fetch("http://ip.tyio.net")
-    let txt = await resp.text()
-    console.log(txt)
-    alert(txt)
+const formatMap = {
+    "integer": "number",
+    "jsonb": "json",
+    "text": "string",
 }
-test_async()
+
+const basePath = "/api/"
+
 
 // See:
 // https://ng-admin-book.marmelab.com/
@@ -35,9 +36,9 @@ app.config(["$httpProvider", (http) => {
 app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) => {
     // create an admin application
     const admin = nga.application('base on postgrest', false)
-        .baseApiUrl('/api/')
+        .baseApiUrl(basePath)
 
-    nga.configure(admin)
+    //nga.configure(admin)
 
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
         headers = headers || {}
@@ -47,7 +48,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = admin.getEntity(what).identifier().name()
+                const idKey = "TODO"
                 const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
@@ -61,9 +62,11 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 for (const key in filters) {
                     let v = filters[key]
                     if (v != null) {
-                        const _ = key.split('...')
-                        const k = _[0]
-                        const operator = _[1] || 'eq'
+                        //const _ = key.split('...')
+                        //const k = _[0]
+                        //const operator = _[1] || 'eq'
+                        let [k, operator] = key.split("...")
+                        operator = operator || "eq"
                         if (v instanceof Date) {
                             v = v.toISOString()
                         }
@@ -95,6 +98,42 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         return data
     })
 
+
+    const load = async () => {
+        let resp = await fetch(basePath)
+        let desc = await resp.json()
+        let definitions = desc.definitions
+        for (let t in definitions) {
+            console.log(t, definitions[t])
+            const entity = nga.entity(t).updateMethod("patch")
+            const properties = definitions[t].properties
+            const fields = []
+            let pk;
+            for (const k in properties) {
+                const field = nga.field(k, formatMap[k.format]).label(k)
+                fields.push(field)
+                if (k.description && k.description.indexOf("Primary Key") > -1) {
+                    pk = nga.field(k).isDetailLink(true)
+                    entity.identifier(pk)
+                }
+            }
+            entity.listView().fields(fields)
+            entity.editionView().fields(fields)
+            entity.creationView().fields(fields)
+            console.log(entity)
+            admin.addEntity(entity)
+        }
+    }
+    nga.configure(admin)
+    load()
+    var id = nga.field('id', "number").isDetailLink(true)
+    const t = nga.entity("x").updateMethod('patch')
+    t.listView().fields([
+        id,
+        nga.field('x', 'json'),
+    ]).identifier(nga.field('id'))
+    admin.addEntity(t)
+    return
 
 
     const addEntity = (name, opts) => {
@@ -173,16 +212,9 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         return entity
     }
 
-        /*
-    const cfg = addEntity("zone", {
-        fields1: [
-            nga.field('name', 'string'),
-            nga.field('beds', 'number'),
-        ],
-    })
-        */
 
-    var id = nga.field('id', "number").isDetailLink(true)
+    return
+
     const zone = nga.entity("zone").updateMethod('patch')
     const doctor = nga.entity("doctor").updateMethod('patch')
     const zoneReference = nga.field('zone', 'reference').targetEntity(zone).targetField(nga.field('id'))
