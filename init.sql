@@ -6,7 +6,6 @@
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
 
-drop table api.uu;
 drop table api.u;
 drop table api.t;
 
@@ -21,14 +20,8 @@ CREATE TABLE api.u (
     t INTEGER REFERENCES api.t (id)
 );
 
-CREATE TABLE api.uu (
-    id INTEGER PRIMARY KEY REFERENCES api.u (id),
-    data JSONB
-);
-
 
 grant all on api.t to web_anon;
 grant all on api.u to web_anon;
-grant all on api.uu to web_anon;
 grant usage, select on sequence api.t_id_seq to web_anon;
 grant usage, select on sequence api.u_id_seq to web_anon;
