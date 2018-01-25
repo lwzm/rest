@@ -14,6 +14,12 @@ const formatMap = {
 
 const basePath = "/api/"
 
+const pks = {}
+
+function sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 
 // See:
 // https://ng-admin-book.marmelab.com/
@@ -38,7 +44,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
     const admin = nga.application('base on postgrest', false)
         .baseApiUrl(basePath)
 
-    //nga.configure(admin)
+    nga.configure(admin)
 
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
         headers = headers || {}
@@ -48,7 +54,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = "TODO"
+                const idKey = "id"
                 const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
@@ -98,154 +104,60 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         return data
     })
 
+    var definitions = JSON.parse(
+        $.ajax({url: "/api/", async: false}).response
+    ).definitions
 
-    const load = async () => {
-        let resp = await fetch(basePath)
-        let desc = await resp.json()
-        let definitions = desc.definitions
-        for (let t in definitions) {
-            console.log(t, definitions[t])
-            const entity = nga.entity(t).updateMethod("patch")
-            const properties = definitions[t].properties
+    !function () {
+        const entities = {}
+
+        for (const tableName in definitions) {
+            entities[tableName] = nga.entity(tableName).updateMethod("patch")
+        }
+
+        for (const tableName in definitions) {
+            const properties = definitions[tableName].properties
+            const entity = entities[tableName]
             const fields = []
-            let pk;
-            for (const k in properties) {
-                const field = nga.field(k, formatMap[k.format]).label(k)
-                fields.push(field)
-                if (k.description && k.description.indexOf("Primary Key") > -1) {
-                    pk = nga.field(k).isDetailLink(true)
+
+            for (const columnName in properties) {
+                const attr = properties[columnName]
+                const desc = attr.description || ""
+                const pkIdx = desc.indexOf(".<pk")
+                const fkIdx = desc.indexOf(".<fk")
+                const type = formatMap[attr.format]
+                //console.log(pkIdx, fkIdx, type, columnName, attr)
+                if (pkIdx > -1) {
+                    const pk = nga.field(columnName, type)
+                        .isDetailLink(true)
                     entity.identifier(pk)
+                    pks[tableName] = pk
+                    fields.push(pk)
+                } else if (fkIdx > -1) {
+                    const _ = desc.slice(fkIdx).split("'")
+                    const table = _[1]
+                    const column = _[3]
+                    const ref = nga.field(columnName, "reference")
+                        .label(columnName)
+                        .targetEntity(entities[table])
+                        .targetField(nga.field(column))
+                    fields.push(ref)
+                } else {
+                    fields.push(
+                        nga.field(columnName, type)
+                        .label(columnName)
+                    )
                 }
             }
+
             entity.listView().fields(fields)
-            entity.editionView().fields(fields)
-            entity.creationView().fields(fields)
-            console.log(entity)
+            const fieldsWithoutID = fields.filter((i) => i != entity.identifier() && i.name() != "id")
+            entity.editionView().fields(fieldsWithoutID)
+            entity.creationView().fields(fieldsWithoutID)
             admin.addEntity(entity)
+            console.log(tableName, definitions[tableName], entity)
         }
-    }
-    nga.configure(admin)
-    load()
-    var id = nga.field('id', "number").isDetailLink(true)
-    const t = nga.entity("x").updateMethod('patch')
-    t.listView().fields([
-        id,
-        nga.field('x', 'json'),
-    ]).identifier(nga.field('id'))
-    admin.addEntity(t)
-    return
-
-
-    const addEntity = (name, opts) => {
-        const {fields1, fields2, idToken} = opts
-        const entity = nga.entity(name).updateMethod('patch')
-        const filters = []
-
-        if (!idToken) {
-            const id = nga.field('id')
-                .label("ID")
-                .pinned(true)  // place ID-searching at top-right corner forever
-            fields1.unshift(id)
-            filters.unshift(id)
-        }
-
-        const fields = fields1.concat(fields2 || [])
-
-        for (const field of fields) {
-            const name = field.name()
-            field.label(name)  // patch it, prefer raw rather than capitalized
-        }
-
-        for (const field of fields1) {  // or `field of fields`
-            const name = field.name()
-            const type = field.type()
-
-            switch (type) {
-                case 'number':
-                case 'float':
-                case 'date':
-                case 'datetime':
-                    filters.push(field)
-                    filters.push(
-                        nga.field(`${name}...gte`, type)
-                        .label(`${name} >=`)
-                    )
-                    filters.push(
-                        nga.field(`${name}...lte`, type)
-                        .label(`${name} <=`)
-                    )
-                    break
-                case 'string':
-                case 'text':
-                case 'wysiwyg':
-                case 'email':
-                    filters.push(
-                        nga.field(`${name}...like`, type)
-                        .label(`${name} ~=`)
-                    )
-                    break
-                default:
-                    filters.push(field)
-                    break
-            }
-        }
-
-
-        entity.listView().fields(fields1)
-            .filters(filters)
-            .perPage(10)  // 10 lines is height enough, i hate scrolling
-            .exportFields(fields1)
-        entity.editionView().fields(fields)
-        entity.creationView().fields(fields)
-
-        // at last
-        // sortField, isDetailLink, identifier
-        if (idToken) {
-            const table = entity.listView()
-            const id = table.getField(idToken)
-            table.sortField(idToken)
-            id.isDetailLink(true)
-            entity.identifier(id)
-        }
-
-        admin.addEntity(entity)
-        return entity
-    }
-
-
-    return
-
-    const zone = nga.entity("zone").updateMethod('patch')
-    const doctor = nga.entity("doctor").updateMethod('patch')
-    const zoneReference = nga.field('zone', 'reference').targetEntity(zone).targetField(nga.field('id'))
-
-    zone.listView().fields([
-        id,
-        nga.field('name', 'string'),
-        nga.field('beds', 'number'),
-    ]).identifier(nga.field('id'))
-    zone.editionView().fields([
-        id,
-        nga.field('name', 'string'),
-        nga.field('beds', 'number'),
-    ])
-
-    doctor.listView().fields([
-        id,
-        zoneReference,
-        nga.field('name', 'string'),
-    ]).identifier(nga.field('id'))
-    doctor.editionView().fields([
-        id,
-        zoneReference,
-        nga.field('name', 'string'),
-        nga.field('info', 'json'),
-    ])
-
-    admin.addEntity(zone)
-    admin.addEntity(doctor)
-
-
+    }()
 
 }])
 

@@ -31,3 +31,4 @@ grant all on api.t to web_anon;
 grant all on api.u to web_anon;
 grant all on api.uu to web_anon;
 grant usage, select on sequence api.t_id_seq to web_anon;
+grant usage, select on sequence api.u_id_seq to web_anon;
