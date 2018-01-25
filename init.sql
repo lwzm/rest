@@ -6,6 +6,19 @@
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
 
+
+drop table api._meta;
+create table api._meta (
+    id serial primary key,
+    "table" varchar(32) not null,
+    "column" varchar(32) not null,
+    type varchar(16),
+    hide boolean
+);
+grant all on api._meta to web_anon;
+grant usage, select on sequence api._meta_id_seq to web_anon;
+
+
 drop table api.exts;
 drop table api.todos;
 
@@ -21,11 +34,8 @@ create table api.todos (
 create table api.exts (
     id serial primary key,
 
-    n1 smallint,
-    n2 integer,
-    n3 bigint,
-    n6 real,
-    n7 double precision,
+    n2 int,
+    n7 float,
 
     x jsonb,
     todo integer references api.todos (id)

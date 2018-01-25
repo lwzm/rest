@@ -33,6 +33,10 @@ const basePath = "/api/"
 
 const pks = {}
 
+// see table _meta
+const customTypes = {}
+const customHides = {}
+
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -104,7 +108,12 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 delete params._page
                 delete params._perPage
                 if (params._sortField) {
-                    params.order = params._sortField + '.' + params._sortDir.toLowerCase()
+                    const field = params._sortField
+                    if (field == "id" && !pks[what]) {
+                        // pass
+                    } else {
+                        params.order = field + '.' + params._sortDir.toLowerCase()
+                    }
                     delete params._sortField
                     delete params._sortDir
                 }
@@ -121,9 +130,33 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         return data
     })
 
-    var definitions = JSON.parse(
-        $.ajax({url: "/api/", async: false}).response
+    const definitions = JSON.parse(
+        $.ajax({url: basePath, async: false}).response
     ).definitions
+
+    const meta = JSON.parse(
+        $.ajax({url: basePath + "_meta", async: false}).response
+    )
+    for (const {table, column, type, hide} of meta) {
+        if (!customTypes[table]) {
+            customTypes[table] = {}
+        }
+        if (!customHides[table]) {
+            customHides[table] = {}
+        }
+        customTypes[table][column] = type
+        customHides[table][column] = hide
+    }
+    console.log(customTypes, customHides)
+
+    const remoteCompleteID = {
+        refreshDelay: 300,
+        searchQuery: function (search) {
+            return {
+                'id...eq': search,
+            }
+        },
+    }
 
     !function () {
         const entities = {}
@@ -137,12 +170,14 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
             const entity = entities[tableName]
             const fields = []
 
+            const types = customTypes[tableName] || {}
+
             for (const columnName in properties) {
                 const attr = properties[columnName]
                 const desc = attr.description || ""
                 const pkIdx = desc.indexOf(".<pk")
                 const fkIdx = desc.indexOf(".<fk")
-                const type = formatMap[attr.format]
+                const type = types[columnName] || formatMap[attr.format]
                 //console.log(pkIdx, fkIdx, type, columnName, attr)
                 if (pkIdx > -1) {
                     const pk = nga.field(columnName, type)
@@ -153,13 +188,12 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                     pks[tableName] = columnName
                     fields.push(pk)
                 } else if (fkIdx > -1) {
-                    const _ = desc.slice(fkIdx).split("'")
-                    const table = _[1]
-                    const column = _[3]
+                    const fs = desc.slice(fkIdx).split("'")
                     const ref = nga.field(columnName, "reference")
                         .label(columnName)
-                        .targetEntity(entities[table])
-                        .targetField(nga.field(column))
+                        .targetEntity(entities[fs[1]])
+                        .targetField(nga.field(fs[3]))
+                        .remoteComplete(true, remoteCompleteID)
                     fields.push(ref)
                 } else {
                     fields.push(
@@ -203,8 +237,12 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 }
             }
 
+            const hides = customHides[tableName] || {}
+
+            const fieldsList = fields.filter((i) => !hides[i.name()])
+
             entity.listView()
-                .fields(fields)
+                .fields(fieldsList)
                 .filters(filters)
                 .exportFields(fields)
                 .perPage(10)
