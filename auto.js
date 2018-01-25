@@ -54,7 +54,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = "id"
+                const idKey = pks[what]
                 const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
@@ -130,8 +130,10 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 if (pkIdx > -1) {
                     const pk = nga.field(columnName, type)
                         .isDetailLink(true)
+                        .pinned(true)
+                        .label(columnName)
                     entity.identifier(pk)
-                    pks[tableName] = pk
+                    pks[tableName] = columnName
                     fields.push(pk)
                 } else if (fkIdx > -1) {
                     const _ = desc.slice(fkIdx).split("'")
@@ -150,12 +152,51 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 }
             }
 
-            entity.listView().fields(fields)
+            const filters = []
+            for (const field of fields) {
+                const name = field.name()
+                const type = field.type()
+                switch (type) {
+                    case 'number':
+                    case 'float':
+                    case 'date':
+                    case 'datetime':
+                        filters.push(field)
+                        filters.push(
+                            nga.field(`${name}...gte`, type)
+                            .label(`${name} >=`)
+                        )
+                        filters.push(
+                            nga.field(`${name}...lte`, type)
+                            .label(`${name} <=`)
+                        )
+                        break
+                    case 'string':
+                    case 'text':
+                    case 'wysiwyg':
+                    case 'email':
+                        filters.push(
+                            nga.field(`${name}...like`, type)
+                            .label(`${name} ~=`)
+                        )
+                        break
+                    default:
+                        filters.push(field)
+                        break
+                }
+            }
+
+            entity.listView()
+                .fields(fields)
+                .filters(filters)
+                .exportFields(fields)
+                .perPage(10)
+
             const fieldsWithoutID = fields.filter((i) => i != entity.identifier() && i.name() != "id")
             entity.editionView().fields(fieldsWithoutID)
             entity.creationView().fields(fieldsWithoutID)
             admin.addEntity(entity)
-            console.log(tableName, definitions[tableName], entity)
+            //console.log(tableName, definitions[tableName], entity)
         }
     }()
 
