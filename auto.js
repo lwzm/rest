@@ -8,8 +8,25 @@ const app = angular.module('myApp', ['ng-admin'])
 
 const formatMap = {
     "integer": "number",
+    "smallint": "number",
+    "bigint": "number",
+
     "jsonb": "json",
-    "text": "string",
+    "json": "json",
+
+    "text": "text",
+    "character varying": "string",
+    "character": "string",
+
+    "boolean": "boolean",
+
+    "timestamp without time zone": "datetime",
+    "timestamp with time zone": "datetime",
+    "date": "date",
+
+    "double precision": "float",
+    "real": "float",
+    "numeric": "float",
 }
 
 const basePath = "/api/"

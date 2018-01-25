@@ -6,22 +6,33 @@
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
 
-drop table api.u;
-drop table api.t;
+drop table api.exts;
+drop table api.todos;
 
-CREATE TABLE api.t (
-    id SERIAL PRIMARY KEY,
-    x JSONB
-);
-
-CREATE TABLE api.u (
-    id SERIAL PRIMARY KEY,
-    s TEXT,
-    t INTEGER REFERENCES api.t (id)
+create table api.todos (
+    id serial primary key,
+    done boolean not null default false,
+    task text not null,
+    dt date,
+    due timestamp with time zone
 );
 
 
-grant all on api.t to web_anon;
-grant all on api.u to web_anon;
-grant usage, select on sequence api.t_id_seq to web_anon;
-grant usage, select on sequence api.u_id_seq to web_anon;
+create table api.exts (
+    id serial primary key,
+
+    n1 smallint,
+    n2 integer,
+    n3 bigint,
+    n6 real,
+    n7 double precision,
+
+    x jsonb,
+    todo integer references api.todos (id)
+);
+
+
+grant all on api.todos to web_anon;
+grant all on api.exts to web_anon;
+grant usage, select on sequence api.todos_id_seq to web_anon;
+grant usage, select on sequence api.exts_id_seq to web_anon;
