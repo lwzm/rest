@@ -62,7 +62,7 @@ app.config(["$httpProvider", (http) => {
 
 app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) => {
     // create an admin application
-    const admin = nga.application('base on postgrest', false)
+    const admin = nga.application('base on postgrest').debug(false)
         .baseApiUrl(basePath)
 
     nga.configure(admin)
@@ -109,8 +109,8 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 delete params._perPage
                 if (params._sortField) {
                     const field = params._sortField
-                    if (field == "id" && !pks[what]) {
-                        // pass
+                    if (field == "id" && pks[what] != "id") {
+                        // pass, ignore field `id` that not exists
                     } else {
                         params.order = field + '.' + params._sortDir.toLowerCase()
                     }
@@ -147,7 +147,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         customTypes[table][column] = type
         customHides[table][column] = hide
     }
-    console.log(customTypes, customHides)
+    //console.log(customTypes, customHides)
 
     const remoteCompleteID = {
         refreshDelay: 300,
@@ -162,7 +162,9 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         const entities = {}
 
         for (const tableName in definitions) {
-            entities[tableName] = nga.entity(tableName).updateMethod("patch")
+            entities[tableName] = nga.entity(tableName)
+                .updateMethod("patch")
+                .label(tableName)
         }
 
         for (const tableName in definitions) {
@@ -185,6 +187,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                         .pinned(true)
                         .label(columnName)
                     entity.identifier(pk)
+                    entity.listView().sortField(columnName)
                     pks[tableName] = columnName
                     fields.push(pk)
                 } else if (fkIdx > -1) {
@@ -243,11 +246,15 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
 
             entity.listView()
                 .fields(fieldsList)
-                .filters(filters)
                 .exportFields(fields)
+                .filters(filters)
                 .perPage(10)
+                //.title(tableName)
+                //.sortDir("ASC")
+                //.infinitePagination(true)
 
-            const fieldsWithoutID = fields.filter((i) => i != entity.identifier() && i.name() != "id")
+
+            const fieldsWithoutID = fields.filter((i) => i.name() != "id")
             entity.editionView().fields(fieldsWithoutID)
             entity.creationView().fields(fieldsWithoutID)
             admin.addEntity(entity)

@@ -7,6 +7,13 @@
 --grant all on schema api to your-user;
 
 
+drop table api.kv;
+create table api.kv (
+    k varchar(9) primary key,
+    v varchar(9)
+);
+grant all on api.kv to web_anon;
+\q
 drop table api._meta;
 create table api._meta (
     id serial primary key,
