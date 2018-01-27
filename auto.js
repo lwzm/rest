@@ -4,6 +4,8 @@ import 'babel-polyfill'
 import 'whatwg-fetch'
 */
 
+import {v} from './cfg'
+
 const App = angular.module('myApp', ['ng-admin'])
 
 const BasePath = "/api/"
@@ -138,132 +140,128 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         },
     }
 
-    !function () {
-        const columnFormatMap = {
-            "integer": "number",
-            "smallint": "number",
-            "bigint": "number",
+    const columnFormatMap = {
+        "integer": "number",
+        "smallint": "number",
+        "bigint": "number",
 
-            "jsonb": "json",
-            "json": "json",
+        "jsonb": "json",
+        "json": "json",
 
-            "text": "text",
-            "character varying": "string",
-            "character": "string",
+        "text": "text",
+        "character varying": "string",
+        "character": "string",
 
-            "boolean": "boolean",
+        "boolean": "boolean",
 
-            "timestamp without time zone": "datetime",
-            "timestamp with time zone": "datetime",
-            "date": "date",
+        "timestamp without time zone": "datetime",
+        "timestamp with time zone": "datetime",
+        "date": "date",
 
-            "double precision": "float",
-            "real": "float",
-            "numeric": "float",
+        "double precision": "float",
+        "real": "float",
+        "numeric": "float",
+    }
+
+    const entities = {}
+
+    for (const tableName in definitions) {
+        entities[tableName] = nga.entity(tableName)
+            .updateMethod("patch")
+            .label(tableName)
+    }
+
+    for (const tableName in definitions) {
+        const properties = definitions[tableName].properties
+        const entity = entities[tableName]
+        const fields = []
+
+        const types = customTypes[tableName] || {}
+
+        for (const columnName in properties) {
+            const attr = properties[columnName]
+            const desc = attr.description || ""
+            const pkIdx = desc.indexOf(".<pk")
+            const fkIdx = desc.indexOf(".<fk")
+            const type = types[columnName] || columnFormatMap[attr.format]
+            //console.log(pkIdx, fkIdx, type, columnName, attr)
+            if (pkIdx > -1) {
+                const pk = nga.field(columnName, type)
+                    .isDetailLink(true)
+                    .pinned(true)
+                    .label(columnName)
+                entity.identifier(pk)
+                entity.listView().sortField(columnName)
+                PKS[tableName] = columnName
+                fields.push(pk)
+            } else if (fkIdx > -1) {
+                const [_0, fkTable, _2, fkColumn] = desc.slice(fkIdx).split("'")
+                const ref = nga.field(columnName, "reference")
+                    .label(columnName)
+                    .targetEntity(entities[fkTable])
+                    .targetField(nga.field(fkColumn))
+                    .remoteComplete(true, remoteCompleteID)
+                fields.push(ref)
+            } else {
+                fields.push(
+                    nga.field(columnName, type)
+                    .label(columnName)
+                )
+            }
         }
 
-        const entities = {}
-
-        for (const tableName in definitions) {
-            entities[tableName] = nga.entity(tableName)
-                .updateMethod("patch")
-                .label(tableName)
-        }
-
-        for (const tableName in definitions) {
-            const properties = definitions[tableName].properties
-            const entity = entities[tableName]
-            const fields = []
-
-            const types = customTypes[tableName] || {}
-
-            for (const columnName in properties) {
-                const attr = properties[columnName]
-                const desc = attr.description || ""
-                const pkIdx = desc.indexOf(".<pk")
-                const fkIdx = desc.indexOf(".<fk")
-                const type = types[columnName] || columnFormatMap[attr.format]
-                //console.log(pkIdx, fkIdx, type, columnName, attr)
-                if (pkIdx > -1) {
-                    const pk = nga.field(columnName, type)
-                        .isDetailLink(true)
-                        .pinned(true)
-                        .label(columnName)
-                    entity.identifier(pk)
-                    entity.listView().sortField(columnName)
-                    PKS[tableName] = columnName
-                    fields.push(pk)
-                } else if (fkIdx > -1) {
-                    const fs = desc.slice(fkIdx).split("'")
-                    const ref = nga.field(columnName, "reference")
-                        .label(columnName)
-                        .targetEntity(entities[fs[1]])
-                        .targetField(nga.field(fs[3]))
-                        .remoteComplete(true, remoteCompleteID)
-                    fields.push(ref)
-                } else {
-                    fields.push(
-                        nga.field(columnName, type)
-                        .label(columnName)
+        const filters = []
+        for (const field of fields) {
+            const name = field.name()
+            const type = field.type()
+            switch (type) {
+                case 'number':
+                case 'float':
+                case 'date':
+                case 'datetime':
+                    filters.push(field)
+                    filters.push(
+                        nga.field(`${name}...gte`, type)
+                        .label(`${name} >=`)
                     )
-                }
+                    filters.push(
+                        nga.field(`${name}...lte`, type)
+                        .label(`${name} <=`)
+                    )
+                    break
+                case 'string':
+                case 'text':
+                case 'wysiwyg':
+                case 'email':
+                    filters.push(
+                        nga.field(`${name}...like`, type)
+                        .label(`${name} ~=`)
+                    )
+                    break
+                default:
+                    filters.push(field)
+                    break
             }
-
-            const filters = []
-            for (const field of fields) {
-                const name = field.name()
-                const type = field.type()
-                switch (type) {
-                    case 'number':
-                    case 'float':
-                    case 'date':
-                    case 'datetime':
-                        filters.push(field)
-                        filters.push(
-                            nga.field(`${name}...gte`, type)
-                            .label(`${name} >=`)
-                        )
-                        filters.push(
-                            nga.field(`${name}...lte`, type)
-                            .label(`${name} <=`)
-                        )
-                        break
-                    case 'string':
-                    case 'text':
-                    case 'wysiwyg':
-                    case 'email':
-                        filters.push(
-                            nga.field(`${name}...like`, type)
-                            .label(`${name} ~=`)
-                        )
-                        break
-                    default:
-                        filters.push(field)
-                        break
-                }
-            }
-
-            const hides = customHides[tableName] || {}
-
-            const fieldsList = fields.filter((i) => !hides[i.name()])
-
-            entity.listView()
-                .fields(fieldsList)
-                .exportFields(fields)
-                .filters(filters)
-                .perPage(10)
-                //.title(tableName)
-                //.sortDir("ASC")
-                //.infinitePagination(true)
-
-
-            const fieldsWithoutID = fields.filter((i) => i.name() != "id")
-            entity.editionView().fields(fieldsWithoutID)
-            entity.creationView().fields(fieldsWithoutID)
-            admin.addEntity(entity)
-            //console.log(tableName, definitions[tableName], entity)
         }
-    }()
+
+        const hides = customHides[tableName] || {}
+        const fieldsList = fields.filter((i) => !hides[i.name()])
+
+        entity.listView()
+            .fields(fieldsList)
+            .exportFields(fields)
+            .filters(filters)
+            .perPage(10)
+            //.title(tableName)
+            //.sortDir("ASC")
+            //.infinitePagination(true)
+
+        const fieldsWithoutID = fields.filter((i) => i.name() != "id")
+        entity.editionView().fields(fieldsWithoutID)
+        entity.creationView().fields(fieldsWithoutID)
+        admin.addEntity(entity)
+        //console.log(tableName, definitions[tableName], entity)
+    }
 
 }])
 
