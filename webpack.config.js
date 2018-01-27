@@ -4,7 +4,7 @@ const path = require('path')
 module.exports = {
     entry: [
         'babel-polyfill',
-        'whatwg-fetch',   /* https://github.com/github/fetch */
+        //'whatwg-fetch',   /* https://github.com/github/fetch */
         './auto.js',
     ],
     output: {

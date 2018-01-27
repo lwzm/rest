@@ -4,38 +4,11 @@ import 'babel-polyfill'
 import 'whatwg-fetch'
 */
 
-const app = angular.module('myApp', ['ng-admin'])
+const App = angular.module('myApp', ['ng-admin'])
 
-const formatMap = {
-    "integer": "number",
-    "smallint": "number",
-    "bigint": "number",
+const BasePath = "/api/"
 
-    "jsonb": "json",
-    "json": "json",
-
-    "text": "text",
-    "character varying": "string",
-    "character": "string",
-
-    "boolean": "boolean",
-
-    "timestamp without time zone": "datetime",
-    "timestamp with time zone": "datetime",
-    "date": "date",
-
-    "double precision": "float",
-    "real": "float",
-    "numeric": "float",
-}
-
-const basePath = "/api/"
-
-const pks = {}
-
-// see table _meta
-const customTypes = {}
-const customHides = {}
+const PKS = {}
 
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -44,7 +17,7 @@ function sleep (ms) {
 
 // See:
 // https://ng-admin-book.marmelab.com/
-app.config(["$httpProvider", (http) => {
+App.config(["$httpProvider", (http) => {
     const myInterceptor = {
         request: (config) => {
             if (config.params && config.params.___strip_id_todo) {
@@ -60,13 +33,7 @@ app.config(["$httpProvider", (http) => {
 }])
 
 
-app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) => {
-    // create an admin application
-    const admin = nga.application('base on postgrest').debug(false)
-        .baseApiUrl(basePath)
-
-    nga.configure(admin)
-
+App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
         headers = headers || {}
 
@@ -75,7 +42,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = pks[what]
+                const idKey = PKS[what]
                 const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
@@ -89,9 +56,6 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 for (const key in filters) {
                     let v = filters[key]
                     if (v != null) {
-                        //const _ = key.split('...')
-                        //const k = _[0]
-                        //const operator = _[1] || 'eq'
                         let [k, operator] = key.split("...")
                         operator = operator || "eq"
                         if (v instanceof Date) {
@@ -109,7 +73,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 delete params._perPage
                 if (params._sortField) {
                     const field = params._sortField
-                    if (field == "id" && pks[what] != "id") {
+                    if (field == "id" && PKS[what] != "id") {
                         // pass, ignore field `id` that not exists
                     } else {
                         params.order = field + '.' + params._sortDir.toLowerCase()
@@ -130,12 +94,27 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
         return data
     })
 
+}])
+
+
+App.config(["NgAdminConfigurationProvider", (nga) => {
+    // create an admin application
+    const admin = nga.application('base on postgrest')
+        .baseApiUrl(BasePath)
+        .debug(false)
+
+    nga.configure(admin)
+
+    // see table _meta
+    const customTypes = {}
+    const customHides = {}
+
     const definitions = JSON.parse(
-        $.ajax({url: basePath, async: false}).response
+        $.ajax({url: BasePath, async: false}).response
     ).definitions
 
     const meta = JSON.parse(
-        $.ajax({url: basePath + "_meta", async: false}).response
+        $.ajax({url: BasePath + "_meta", async: false}).response
     )
     for (const {table, column, type, hide} of meta) {
         if (!customTypes[table]) {
@@ -159,6 +138,29 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
     }
 
     !function () {
+        const columnFormatMap = {
+            "integer": "number",
+            "smallint": "number",
+            "bigint": "number",
+
+            "jsonb": "json",
+            "json": "json",
+
+            "text": "text",
+            "character varying": "string",
+            "character": "string",
+
+            "boolean": "boolean",
+
+            "timestamp without time zone": "datetime",
+            "timestamp with time zone": "datetime",
+            "date": "date",
+
+            "double precision": "float",
+            "real": "float",
+            "numeric": "float",
+        }
+
         const entities = {}
 
         for (const tableName in definitions) {
@@ -179,7 +181,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                 const desc = attr.description || ""
                 const pkIdx = desc.indexOf(".<pk")
                 const fkIdx = desc.indexOf(".<fk")
-                const type = types[columnName] || formatMap[attr.format]
+                const type = types[columnName] || columnFormatMap[attr.format]
                 //console.log(pkIdx, fkIdx, type, columnName, attr)
                 if (pkIdx > -1) {
                     const pk = nga.field(columnName, type)
@@ -188,7 +190,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
                         .label(columnName)
                     entity.identifier(pk)
                     entity.listView().sortField(columnName)
-                    pks[tableName] = columnName
+                    PKS[tableName] = columnName
                     fields.push(pk)
                 } else if (fkIdx > -1) {
                     const fs = desc.slice(fkIdx).split("'")
@@ -264,3 +266,7 @@ app.config(['NgAdminConfigurationProvider', "RestangularProvider", (nga, rest) =
 
 }])
 
+async function t() {
+    await sleep(1000)
+}
+t()
