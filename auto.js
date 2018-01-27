@@ -32,6 +32,17 @@ App.config(["$httpProvider", (http) => {
     http.interceptors.push(() => myInterceptor)
 }])
 
+App.config(["RestangularProvider", (rest) => {
+    rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
+        switch (operation) {
+            case 'getList':
+                response.totalCount = response.headers('Content-Range').split('/')[1]
+                break
+        }
+        return data
+    })
+
+}])
 
 App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
@@ -84,16 +95,6 @@ App.config(["RestangularProvider", (rest) => {
                 break
         }
     })
-
-    rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
-        switch (operation) {
-            case 'getList':
-                response.totalCount = response.headers('Content-Range').split('/')[1]
-                break
-        }
-        return data
-    })
-
 }])
 
 
