@@ -4,7 +4,7 @@ import 'babel-polyfill'
 import 'whatwg-fetch'
 */
 
-import {v} from './cfg'
+import cfg from "./cfg"
 
 const App = angular.module('myApp', ['ng-admin'])
 
@@ -19,6 +19,8 @@ function sleep (ms) {
 
 // See:
 // https://ng-admin-book.marmelab.com/
+
+
 App.config(["$httpProvider", (http) => {
     const myInterceptor = {
         request: (config) => {
@@ -30,9 +32,9 @@ App.config(["$httpProvider", (http) => {
             return config
         },
     }
-
     http.interceptors.push(() => myInterceptor)
 }])
+
 
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
@@ -43,8 +45,8 @@ App.config(["RestangularProvider", (rest) => {
         }
         return data
     })
-
 }])
+
 
 App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
@@ -140,29 +142,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         },
     }
 
-    const columnFormatMap = {
-        "integer": "number",
-        "smallint": "number",
-        "bigint": "number",
-
-        "jsonb": "json",
-        "json": "json",
-
-        "text": "text",
-        "character varying": "string",
-        "character": "string",
-
-        "boolean": "boolean",
-
-        "timestamp without time zone": "datetime",
-        "timestamp with time zone": "datetime",
-        "date": "date",
-
-        "double precision": "float",
-        "real": "float",
-        "numeric": "float",
-    }
-
     const entities = {}
 
     for (const tableName in definitions) {
@@ -183,7 +162,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             const desc = attr.description || ""
             const pkIdx = desc.indexOf(".<pk")
             const fkIdx = desc.indexOf(".<fk")
-            const type = types[columnName] || columnFormatMap[attr.format]
+            const type = types[columnName] || cfg.columnFormatMap[attr.format]
             //console.log(pkIdx, fkIdx, type, columnName, attr)
             if (pkIdx > -1) {
                 const pk = nga.field(columnName, type)
