@@ -1,7 +1,7 @@
 /*
  * https://www.cnblogs.com/princesong/p/6728250.html
+ * http://babeljs.io/docs/plugins/transform-runtime/
 import 'babel-polyfill'
-import 'whatwg-fetch'
 */
 
 import cfg from "./cfg"
@@ -15,7 +15,6 @@ const PKS = {}
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
-
 
 // See:
 // https://ng-admin-book.marmelab.com/
