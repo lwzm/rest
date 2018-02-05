@@ -1,4 +1,19 @@
 {
-    "presets": ["env"],
-    "plugins": ["transform-runtime"]
+    "presets": [
+        ["env", {
+            "targets": {
+                "browsers": [
+                    //"> 5%",
+                    "last 2 versions",
+                    //"last 2 Chrome versions",
+                    //"IE > 10",
+                ],
+                "node": "current",
+            },
+        }]
+    ],
+
+    "plugins": [
+        "transform-runtime",
+    ],
 }

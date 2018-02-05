@@ -245,5 +245,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
 async function t() {
     await sleep(1000)
+    let resp = await fetch("http://ip.tyio.net")
+    let text = await resp.text()
+    console.log(text)
 }
 t()
