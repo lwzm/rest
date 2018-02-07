@@ -167,9 +167,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
             let field
             if (tableName == "_meta" && columnName == "type") {
-                field = nga.field("type", "choice").choices(
-                    cfg.fieldTypes.map(function (i) {return {value: i, label: i}})
-                )
+                field = nga.field(columnName, "choice").choices(
+                    cfg.fieldTypes.map(function (i) {
+                        return {value: i, label: i}
+                    })
+                ).label(columnName)
             } else if (pkIdx > -1) {
                 const pk = nga.field(columnName, type)
                     .isDetailLink(true)
