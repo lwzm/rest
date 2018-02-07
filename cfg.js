@@ -23,8 +23,22 @@ const columnFormatMap = {
     "numeric": "float",
 }
 
+const fieldTypes = [
+    "string",
+    "text",
+    "wysiwyg",
+    "password",
+    "email",
+    "date",
+    "datetime",
+    "number",
+    "float",
+    "boolean",
+    "json",
+]
 
 export default {
     v,
     columnFormatMap,
+    fieldTypes,
 }

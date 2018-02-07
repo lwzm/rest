@@ -117,22 +117,22 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         $.ajax({url: BasePath, async: false}).response
     ).definitions
 
-    const meta = JSON.parse(
-        $.ajax({url: BasePath + "_meta", async: false}).response
-    )
-    for (const {table, column, type, hide} of meta) {
-        if (!customTypes[table]) {
-            customTypes[table] = {}
+    const resp = $.ajax({url: BasePath + "_meta", async: false})
+    if (resp.status == 200) {
+        const meta = JSON.parse(resp.response)
+        for (const {table, column, type, hide} of meta) {
+            if (!customTypes[table]) {
+                customTypes[table] = {}
+            }
+            if (!customHides[table]) {
+                customHides[table] = {}
+            }
+            customTypes[table][column] = type
+            customHides[table][column] = hide
         }
-        if (!customHides[table]) {
-            customHides[table] = {}
-        }
-        customTypes[table][column] = type
-        customHides[table][column] = hide
     }
-    //console.log(customTypes, customHides)
 
-    const remoteCompleteID = {
+    const remoteCompleteOptions = {
         refreshDelay: 300,
         searchQuery: function (search) {
             return {
@@ -161,9 +161,16 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             const desc = attr.description || ""
             const pkIdx = desc.indexOf(".<pk")
             const fkIdx = desc.indexOf(".<fk")
-            const type = types[columnName] || cfg.columnFormatMap[attr.format]
+            const type = types[columnName] || cfg.columnFormatMap[attr.format] || "string"
             //console.log(pkIdx, fkIdx, type, columnName, attr)
-            if (pkIdx > -1) {
+
+
+            let field
+            if (tableName == "_meta" && columnName == "type") {
+                field = nga.field("type", "choice").choices(
+                    cfg.fieldTypes.map(function (i) {return {value: i, label: i}})
+                )
+            } else if (pkIdx > -1) {
                 const pk = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
@@ -171,21 +178,19 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 entity.identifier(pk)
                 entity.listView().sortField(columnName)
                 PKS[tableName] = columnName
-                fields.push(pk)
+                field = pk
             } else if (fkIdx > -1) {
                 const [_0, fkTable, _2, fkColumn] = desc.slice(fkIdx).split("'")
-                const ref = nga.field(columnName, "reference")
+                field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(entities[fkTable])
                     .targetField(nga.field(fkColumn))
-                    .remoteComplete(true, remoteCompleteID)
-                fields.push(ref)
+                    .remoteComplete(true, remoteCompleteOptions)
             } else {
-                fields.push(
-                    nga.field(columnName, type)
-                    .label(columnName)
-                )
+                field = nga.field(columnName, type).label(columnName)
             }
+            fields.push(field)
+
         }
 
         const filters = []
