@@ -170,6 +170,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const fields = []
 
         const types = customTypes[tableName] || {}
+        const hides = customHides[tableName] || {}
+        const readOnlies = customReadOnlies[tableName] || {}
 
         for (const columnName in properties) {
             const attr = properties[columnName]
@@ -209,6 +211,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             } else {
                 field = nga.field(columnName, type).label(columnName)
             }
+
+            if (readOnlies[columnName]) {
+                field = field.editable(false)
+            }
+
             fields.push(field)
 
         }
@@ -247,8 +254,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             }
         }
 
-        const hides = customHides[tableName] || {}
-        const readOnlies = customReadOnlies[tableName] || {}
         const fieldsForList = fields.filter((i) => !hides[i.name()])
 
         entity.listView()
@@ -262,7 +267,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
         const fieldsForEdit = fields
             .filter((i) => !(i.name() == "id" && i.type() == "number"))
-            .filter((i) => !readOnlies[i.name()])
         entity.editionView().fields(fieldsForEdit)
         entity.creationView().fields(fieldsForEdit)
 
