@@ -261,7 +261,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             //.infinitePagination(true)
 
         const fieldsForEdit = fields
-            .filter((i) => i.name() != "id")
+            .filter((i) => i.name() != "id" && i.type() != "number")
             .filter((i) => !readOnlies[i.name()])
         entity.editionView().fields(fieldsForEdit)
         entity.creationView().fields(fieldsForEdit)

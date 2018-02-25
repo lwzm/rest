@@ -20,6 +20,7 @@ create table api._meta (
     "table" varchar(32) not null,
     "column" varchar(32) not null,
     type varchar(16),
+    choices jsonb,  -- this is an array
     readonly boolean,
     hide boolean
 );
