@@ -112,6 +112,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     // see table _meta
     const customTypes = {}
     const customHides = {}
+    const customReadOnlies = {}
 
     const definitions = JSON.parse(
         $.ajax({url: BasePath, async: false}).response
@@ -120,15 +121,20 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     const resp = $.ajax({url: BasePath + "_meta", async: false})
     if (resp.status == 200) {
         const meta = JSON.parse(resp.response)
-        for (const {table, column, type, hide} of meta) {
+        for (const {table, column, type, readonly, hide} of meta) {
             if (!customTypes[table]) {
                 customTypes[table] = {}
             }
             if (!customHides[table]) {
                 customHides[table] = {}
             }
+            if (!customReadOnlies[table]) {
+                customReadOnlies[table] = {}
+            }
+
             customTypes[table][column] = type
             customHides[table][column] = hide
+            customReadOnlies[table][column] = readonly
         }
     }
 
@@ -242,10 +248,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         }
 
         const hides = customHides[tableName] || {}
-        const fieldsList = fields.filter((i) => !hides[i.name()])
+        const readOnlies = customReadOnlies[tableName] || {}
+        const fieldsForList = fields.filter((i) => !hides[i.name()])
 
         entity.listView()
-            .fields(fieldsList)
+            .fields(fieldsForList)
             .exportFields(fields)
             .filters(filters)
             .perPage(10)
@@ -253,9 +260,12 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             //.sortDir("ASC")
             //.infinitePagination(true)
 
-        const fieldsWithoutID = fields.filter((i) => i.name() != "id")
-        entity.editionView().fields(fieldsWithoutID)
-        entity.creationView().fields(fieldsWithoutID)
+        const fieldsForEdit = fields
+            .filter((i) => i.name() != "id")
+            .filter((i) => !readOnlies[i.name()])
+        entity.editionView().fields(fieldsForEdit)
+        entity.creationView().fields(fieldsForEdit)
+
         admin.addEntity(entity)
         //console.log(tableName, definitions[tableName], entity)
     }

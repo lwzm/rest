@@ -20,6 +20,7 @@ create table api._meta (
     "table" varchar(32) not null,
     "column" varchar(32) not null,
     type varchar(16),
+    readonly boolean,
     hide boolean
 );
 grant all on api._meta to web_anon;
