@@ -145,6 +145,15 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         },
     }
 
+    function remoteCompleteOptionsFactory(key) {
+        return {
+            refreshDelay: 300,
+            searchQuery: (search) => ({
+                [`${key}...eq`]: search,
+            }),
+        }
+    }
+
     const entities = {}
 
     for (const tableName in definitions) {
@@ -163,6 +172,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         for (const columnName in properties) {
             const attr = properties[columnName]
             const desc = attr.description || ""
+            /*
+             * desc likes those:
+             * "Note: This is a Primary Key.<pk/>"
+             * "Note: This is a Foreign Key to `todos.id`.<fk table='todos' column='id'/>"
+             */
             const pkIdx = desc.indexOf(".<pk")
             const fkIdx = desc.indexOf(".<fk")
             const type = types[columnName] || cfg.columnFormatMap[attr.format] || "string"
@@ -189,7 +203,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     .label(columnName)
                     .targetEntity(entities[fkTable])
                     .targetField(nga.field(fkColumn))
-                    .remoteComplete(true, remoteCompleteOptions)
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkColumn))
             } else {
                 field = nga.field(columnName, type).label(columnName)
             }
