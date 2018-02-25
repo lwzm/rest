@@ -12,10 +12,6 @@ const BasePath = "/api/"
 
 const PKS = {}
 
-class R {
-    a=1;
-}
-
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
