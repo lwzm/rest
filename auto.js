@@ -267,8 +267,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
         const fieldsForEdit = fields
             .filter((i) => !(i.name() == "id" && i.type() == "number"))
+        const fieldsForCreate = fieldsForEdit
+            .filter((i) => i.editable())
         entity.editionView().fields(fieldsForEdit)
-        entity.creationView().fields(fieldsForEdit)
+        entity.creationView().fields(fieldsForCreate)
 
         admin.addEntity(entity)
         //console.log(tableName, definitions[tableName], entity)
