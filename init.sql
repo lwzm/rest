@@ -6,26 +6,16 @@
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
 
-
-drop table api.kv;
-create table api.kv (
-    k varchar(9) primary key,
-    v varchar(9)
-);
-grant all on api.kv to web_anon;
-\q
 drop table api._meta;
 create table api._meta (
-    id serial primary key,
-    "table" varchar(32) not null,
-    "column" varchar(32) not null,
+    name varchar(32) primary key,
     type varchar(16),
     choices jsonb,  -- this is an array
     readonly boolean,
     hide boolean
 );
 grant all on api._meta to web_anon;
-grant usage, select on sequence api._meta_id_seq to web_anon;
+\q
 
 
 drop table api.exts;

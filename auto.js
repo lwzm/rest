@@ -110,31 +110,31 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     nga.configure(admin)
 
     // see table _meta
-    const customTypes = {}
-    const customHides = {}
-    const customReadOnlies = {}
+    const customSettings = {}
 
+    const entities = {}
     const definitions = JSON.parse(
         $.ajax({url: BasePath, async: false}).response
     ).definitions
 
-    const resp = $.ajax({url: BasePath + "_meta", async: false})
-    if (resp.status == 200) {
-        const meta = JSON.parse(resp.response)
-        for (const {table, column, type, readonly, hide} of meta) {
-            if (!customTypes[table]) {
-                customTypes[table] = {}
-            }
-            if (!customHides[table]) {
-                customHides[table] = {}
-            }
-            if (!customReadOnlies[table]) {
-                customReadOnlies[table] = {}
-            }
+    for (const tableName in definitions) {
+        customSettings[tableName] = {}
+        entities[tableName] = nga.entity(tableName)
+            .updateMethod("patch")
+            .label(tableName)
+    }
 
-            customTypes[table][column] = type
-            customHides[table][column] = hide
-            customReadOnlies[table][column] = readonly
+    const resp = $.ajax({url: BasePath + "_meta", async: false})
+    if (resp.status > 200) {
+        throw resp
+    }
+    const meta = JSON.parse(resp.response)
+    for (const {name, type, readonly, hide} of meta) {
+        const [table, column] = name.split(".")
+        customSettings[table][column] = {
+            type,
+            readonly,
+            hide,
         }
     }
 
@@ -156,26 +156,15 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         }
     }
 
-    const entities = {}
-
-    for (const tableName in definitions) {
-        entities[tableName] = nga.entity(tableName)
-            .updateMethod("patch")
-            .label(tableName)
-    }
-
     for (const tableName in definitions) {
         const properties = definitions[tableName].properties
         const entity = entities[tableName]
         const fields = []
 
-        const types = customTypes[tableName] || {}
-        const hides = customHides[tableName] || {}
-        const readOnlies = customReadOnlies[tableName] || {}
-
         for (const columnName in properties) {
             const attr = properties[columnName]
             const desc = attr.description || ""
+            const setting = customSettings[tableName][columnName] || {}
             /*
              * desc likes those:
              * "Note: This is a Primary Key.<pk/>"
@@ -183,7 +172,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
              */
             const pkIdx = desc.indexOf(".<pk")
             const fkIdx = desc.indexOf(".<fk")
-            const type = types[columnName] || cfg.columnFormatMap[attr.format] || "string"
+            const type = setting.type || cfg.columnFormatMap[attr.format] || "string"
             //console.log(pkIdx, fkIdx, type, columnName, attr)
 
 
@@ -212,7 +201,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 field = nga.field(columnName, type).label(columnName)
             }
 
-            if (readOnlies[columnName]) {
+            if (setting.readonly) {
                 field = field.editable(false)
             }
 
@@ -254,7 +243,13 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             }
         }
 
-        const fieldsForList = fields.filter((i) => !hides[i.name()])
+        const fieldsForList = fields.filter(function (i) {
+            const meta = customSettings[tableName][i.name()]
+            if (meta && meta.hide) {
+                return false
+            }
+            return true
+        })
 
         entity.listView()
             .fields(fieldsForList)
