@@ -177,11 +177,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
 
             let field
-            if (tableName == "_meta" && columnName == "type") {
-                field = nga.field(columnName, "choice").choices(
-                    cfg.fieldTypes.map((i) => ({value: i, label: i}))
-                ).label(columnName)
-            } else if (pkIdx > -1) {
+
+            if (pkIdx > -1) {
                 const pk = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
@@ -197,6 +194,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     .targetEntity(entities[fkTable])
                     .targetField(nga.field(fkColumn))
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkColumn))
+            } else if (setting.choices) {
+                field = nga.field(columnName, "choice").choices(
+                    setting.choices.map((i) => ({value: i, label: i}))
+                ).label(columnName)
             } else {
                 field = nga.field(columnName, type).label(columnName)
             }
