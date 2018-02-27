@@ -129,13 +129,9 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         throw resp
     }
     const meta = JSON.parse(resp.response)
-    for (const {name, type, readonly, hide} of meta) {
-        const [table, column] = name.split(".")
-        customSettings[table][column] = {
-            type,
-            readonly,
-            hide,
-        }
+    for (const i of meta) {
+        const [table, column] = i.name.split(".")
+        customSettings[table][column] = i
     }
 
     const remoteCompleteOptions = {
@@ -174,7 +170,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             const fkIdx = desc.indexOf(".<fk")
             const type = setting.type || cfg.columnFormatMap[attr.format] || "string"
             //console.log(pkIdx, fkIdx, type, columnName, attr)
-
 
             let field
 

@@ -15,6 +15,10 @@ create table api._meta (
     hide boolean
 );
 grant all on api._meta to web_anon;
+insert into api._meta (name, choices) values (
+    '_meta.type',
+    '["string", "text", "wysiwyg", "password", "email", "date", "datetime", "number", "float", "boolean", "json"]'::json
+)
 \q
 
 
