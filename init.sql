@@ -5,6 +5,7 @@
 --grant web_anon to your-db;
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
+\q
 
 drop table api._meta;
 create table api._meta (
@@ -17,7 +18,19 @@ create table api._meta (
 grant all on api._meta to web_anon;
 insert into api._meta (name, choices) values (
     '_meta.type',
-    '["string", "text", "wysiwyg", "password", "email", "date", "datetime", "number", "float", "boolean", "json"]'::json
+    '[
+      "string",
+      "text",
+      "wysiwyg",
+      "password",
+      "email",
+      "date",
+      "datetime",
+      "number",
+      "float",
+      "boolean",
+      "json"
+    ]'::json
 )
 \q
 

@@ -169,7 +169,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             const pkIdx = desc.indexOf(".<pk")
             const fkIdx = desc.indexOf(".<fk")
             const type = setting.type || cfg.columnFormatMap[attr.format] || "string"
-            //console.log(pkIdx, fkIdx, type, columnName, attr)
 
             let field
 
@@ -271,8 +270,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
 async function t() {
     await sleep(1000)
-    let resp = await fetch("http://ip.tyio.net")
-    let text = await resp.text()
-    console.log(text)
+    //let resp = await fetch("http://ip.tyio.net")
+    //let text = await resp.text()
+    //console.log(text)
 }
 t()
