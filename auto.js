@@ -275,3 +275,7 @@ async function t() {
     //console.log(text)
 }
 t()
+
+class T {
+    a = 1
+}
