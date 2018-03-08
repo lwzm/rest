@@ -109,29 +109,36 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
     nga.configure(admin)
 
-    // see table _meta
-    const customSettings = {}
-
     const entities = {}
-    const definitions = JSON.parse(
-        $.ajax({url: BasePath, async: false}).response
-    ).definitions
+    const definitions = {}
+    const customSettings = {}  // see table _meta
 
-    for (const tableName in definitions) {
-        customSettings[tableName] = {}
-        entities[tableName] = nga.entity(tableName)
-            .updateMethod("patch")
-            .label(tableName)
+    // uri: /
+    {
+        const resp = $.ajax({url: BasePath, async: false})
+        if (resp.status > 200) {
+            alert(resp.status)
+            throw resp
+        }
+
+        Object.assign(definitions, JSON.parse(resp.response).definitions)
+
+        for (const tableName in definitions) {
+            customSettings[tableName] = {}
+            entities[tableName] = nga.entity(tableName)
+                .updateMethod("patch")
+                .label(tableName)
+        }
     }
 
-    const resp = $.ajax({url: BasePath + "_meta", async: false})
-    if (resp.status > 200) {
-        throw resp
-    }
-    const meta = JSON.parse(resp.response)
-    for (const i of meta) {
-        const [table, column] = i.name.split(".")
-        customSettings[table][column] = i
+    // uri: /_meta
+    {
+        const resp = $.ajax({url: BasePath + "_meta", async: false})
+        const meta = JSON.parse(resp.response)
+        for (const i of meta) {
+            const [table, column] = i.name.split(".")
+            customSettings[table][column] = i
+        }
     }
 
     const remoteCompleteOptions = {
