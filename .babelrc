@@ -15,6 +15,12 @@
     ],
 
     "plugins": [
+        /*
+        // mobx
+        "transform-decorators-legacy",
+        "mobx-deep-action",
+        */
+
         "transform-runtime",
         "transform-class-properties",
     ],
