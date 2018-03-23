@@ -20,26 +20,14 @@ function sleep (ms) {
 // https://ng-admin-book.marmelab.com/
 
 
-App.config(["$httpProvider", (http) => {
-    const myInterceptor = {
-        request: (config) => {
-            if (config.params && config.params.___strip_id_todo) {
-                delete config.params.___strip_id_todo
-                const url = config.url
-                config.url = url.slice(0, url.lastIndexOf("/"))
-            }
-            return config
-        },
-    }
-    http.interceptors.push(() => myInterceptor)
-}])
-
-
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
         switch (operation) {
+            case 'get':
+                data = data[0]
+                break
             case 'getList':
-                response.totalCount = response.headers('Content-Range').split('/')[1]
+                response.totalCount = 100
                 break
         }
         return data
@@ -55,45 +43,21 @@ App.config(["RestangularProvider", (rest) => {
             case 'get':
             case 'patch':
             case 'remove':
-                headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = PKS[what]
-                const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
-                params[idKey] = `eq.${idValue}`
-                params.___strip_id_todo = true
                 break
             case 'getList':
-                headers['Prefer'] = "count=exact"
-
-                const filters = params._filters
-                delete params._filters
-
-                for (const key in filters) {
-                    let v = filters[key]
-                    if (v != null) {
-                        let [k, operator] = key.split("...")
-                        operator = operator || "eq"
-                        if (v instanceof Date) {
-                            v = v.toISOString()
-                        }
-                        params[k] = `${operator}.${v}`
-                    }
-                }
-
-                //headers['Range-Unit'] = what
-                const p = params._page
-                const u = params._perPage
-                headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
-                delete params._page
+                params._size = params._perPage
+                params._p = params._page
                 delete params._perPage
+                delete params._page
+
                 if (params._sortField) {
-                    const field = params._sortField
-                    if (field == "id" && PKS[what] != "id") {
-                        // pass, ignore field `id` that not exists
-                    } else {
-                        params.order = field + '.' + params._sortDir.toLowerCase()
+                    let sort = params._sortField
+                    if (params._sortDir == "DESC") {
+                        sort = '-' + sort
                     }
-                    delete params._sortField
+                    params._sort = sort
                     delete params._sortDir
+                    delete params._sortField
                 }
                 break
         }
@@ -109,56 +73,82 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
     nga.configure(admin)
 
-    const entities = {}
-    const definitions = {}
-    const customSettings = {}  // see table _meta
+    //var u = nga.entity('h5_link');
+    const tableNames = [
+        "user",
+        "h5_goods",
+        "goods",
+    ]
 
-    // uri: /
-    {
-        const resp = $.ajax({url: BasePath, async: false})
+    let entities = {}
+
+    for (const tableName of tableNames) {
+        const resp = $.ajax({url: `${BasePath}${tableName}/describe` , async: false})
         if (resp.status > 200) {
             alert(resp.status)
             throw resp
         }
+        const describe = JSON.parse(resp.response)
+        const entity = nga.entity(tableName)
+            .updateMethod("patch")
+            .label(tableName)
+        const fields = []
 
-        Object.assign(definitions, JSON.parse(resp.response).definitions)
-
-        for (const tableName in definitions) {
-            customSettings[tableName] = {}
-            entities[tableName] = nga.entity(tableName)
-                .updateMethod("patch")
-                .label(tableName)
+        for (const info of describe) {
+            //console.log(info)
+            let type = info.Type
+            if (type.startsWith("int")) {
+                type = "number"
+            } else if (type.indexOf("char") > -1) {
+                type = "string"
+            } else {
+                type = "string"
+            }
+            let columnName = info.Field
+            let field
+            if (info.Key == "PRI") {
+                const pk = nga.field(columnName, type)
+                    .isDetailLink(true)
+                    .pinned(true)
+                    .label(columnName)
+                entity.identifier(pk)
+                entity.listView().sortField(columnName)
+                field = pk
+            } else {
+                field = nga.field(columnName, type).label(columnName)
+            }
+            fields.push(field)
         }
-    }
+
+        entity.listView()
+            .fields(fields)
+            .exportFields(fields)
+            .perPage(10)
+            //.title(tableName)
+            //.sortDir("ASC")
+            //.infinitePagination(true)
+
+        const fieldsForEdit = fields
+            .filter((i) => !(i.name() == "RecordID" || i.name() == "id" && i.type() == "number"))
+        const fieldsForCreate = fieldsForEdit
+        //.filter((i) => i.editable())
+        entity.editionView().fields(fieldsForEdit)
+        entity.creationView().fields(fieldsForCreate)
+
+        admin.addEntity(entity)
+    } 
+    //let rid = nga.field("RecordID").isDetailLink(true)
+    //var u = nga.entity('user').identifier(rid);
+    //u.listView().fields([
+        //rid,
+        //nga.field('username'),
+    //])
+    //u.editionView().fields(u.listView().fields());
+    //admin.addEntity(u);
+
 
     // uri: /_meta
-    {
-        const resp = $.ajax({url: BasePath + "_meta", async: false})
-        const meta = JSON.parse(resp.response)
-        for (const i of meta) {
-            const [table, column] = i.name.split(".")
-            customSettings[table][column] = i
-        }
-    }
-
-    const remoteCompleteOptions = {
-        refreshDelay: 300,
-        searchQuery: function (search) {
-            return {
-                'id...eq': search,
-            }
-        },
-    }
-
-    function remoteCompleteOptionsFactory(key) {
-        return {
-            refreshDelay: 300,
-            searchQuery: (search) => ({
-                [`${key}...eq`]: search,
-            }),
-        }
-    }
-
+    let definitions=[]
     for (const tableName in definitions) {
         const properties = definitions[tableName].properties
         const entity = entities[tableName]
