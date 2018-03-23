@@ -27,7 +27,7 @@ App.config(["RestangularProvider", (rest) => {
                 data = data[0]
                 break
             case 'getList':
-                response.totalCount = 100
+                response.totalCount = 500
                 break
         }
         return data
@@ -67,13 +67,20 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
-    const admin = nga.application('base on postgrest')
+    const admin = nga.application('xl')
         .baseApiUrl(BasePath)
         .debug(false)
 
     nga.configure(admin)
 
     //var u = nga.entity('h5_link');
+    const resp = $.ajax({url: `${BasePath}tables` , async: false})
+    if (resp.status > 200) {
+        alert(resp.status)
+        throw resp
+    }
+    let re = /[a-zA-Z0-9_]/
+    //const tableNames = JSON.parse(resp.response).map(i=>i.resource).filter((s)=>re.test(s))
     const tableNames = [
         "user",
         "h5_goods",
@@ -97,14 +104,23 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         for (const info of describe) {
             //console.log(info)
             let type = info.Type
-            if (type.startsWith("int")) {
+            let columnName = info.Field
+            if (type.indexOf("int") > -1) {
                 type = "number"
             } else if (type.indexOf("char") > -1) {
                 type = "string"
+            } else if (type.indexOf("text") > -1) {
+                type = "text"
+            } else if (type.indexOf("double") > -1) {
+                type = "float"
+            } else if (type == "datetime") {
+                type = "datetime"
+            } else if (type == "date") {
+                type = "date"
             } else {
+                console.log(tableName, columnName, type)
                 type = "string"
             }
-            let columnName = info.Field
             let field
             if (info.Key == "PRI") {
                 const pk = nga.field(columnName, type)
@@ -123,7 +139,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         entity.listView()
             .fields(fields)
             .exportFields(fields)
-            .perPage(10)
+            .perPage(50)
             //.title(tableName)
             //.sortDir("ASC")
             //.infinitePagination(true)
