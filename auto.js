@@ -83,6 +83,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     //const tableNames = JSON.parse(resp.response).map(i=>i.resource).filter((s)=>re.test(s))
     const tableNames = [
         "user",
+        "userearning",
         "h5_goods",
         "goods",
     ]
@@ -272,8 +273,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             .filter((i) => !(i.name() == "id" && i.type() == "number"))
         const fieldsForCreate = fieldsForEdit
             .filter((i) => i.editable())
-        entity.editionView().fields(fieldsForEdit)
-        entity.creationView().fields(fieldsForCreate)
+        if (tableName.endsWith("goods")) {
+            entity.editionView().fields(fieldsForEdit)
+            entity.creationView().fields(fieldsForCreate)
+        } 
 
         admin.addEntity(entity)
         //console.log(tableName, definitions[tableName], entity)
