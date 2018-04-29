@@ -129,8 +129,9 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 .label(tableName)
             tables[tableName] = {
                 entity,
-                customSettings: {},
                 properties: definitions[tableName].properties,
+                customSettings: {},
+                referencedList: [],
             }
         }
     }
@@ -193,13 +194,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 PKS[tableName] = columnName
                 field = pk
             } else if (fkIdx > -1) {
-                const [_0, fkTable, _2, fkColumn] = desc.slice(fkIdx).split("'")
+                const [_0, fkTableName, _2, fkColumnName] = desc.slice(fkIdx).split("'")
+                const fkTable = tables[fkTableName]
+                fkTable.referencedList.push({tableName, columnName})
                 field = nga.field(columnName, "reference")
                     .label(columnName)
-                    .targetEntity(tables[fkTable].entity)
-                    .targetField(nga.field(fkColumn))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkColumn))
-                referencedListTodos.push({fkTable, tableName, columnName})
+                    .targetEntity(fkTable.entity)
+                    .targetField(nga.field(fkColumnName))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkColumnName))
             } else if (setting.choices) {
                 field = nga.field(columnName, "choice").choices(
                     setting.choices.map((i) => ({value: i, label: i}))
@@ -249,8 +251,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     break
             }
         }
-        tables[tableName].fields = fields
-        tables[tableName].filters = filters
+        Object.assign(table, {fields, filters})
     }
 
     for (const tableName in tables) {
@@ -281,16 +282,19 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         entity.creationView().fields(fieldsForCreate)
     }
 
-    for (const {fkTable, tableName, columnName} of referencedListTodos) {
-        const entity = tables[fkTable].entity
-        const target = tables[tableName].entity
-
-        entity.editionView().fields([
-            nga.field(tableName, "referenced_list")
-                .targetEntity(target)
-                .targetReferenceField(columnName)
-                .targetFields(target.listView().fields())
-        ])
+    for (const tableName in tables) {
+        const {entity, referencedList} = tables[tableName]
+        const fields = []
+        for (const {tableName, columnName} of referencedList) {
+            const target = tables[tableName].entity
+            fields.push(
+                nga.field(tableName, "referenced_list")
+                    .targetEntity(target)
+                    .targetReferenceField(columnName)
+                    .targetFields(target.listView().fields())
+            )
+        }
+        entity.editionView().fields(fields)
     }
 
     for (const tableName in tables) {
