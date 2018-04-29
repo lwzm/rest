@@ -292,6 +292,17 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     .targetEntity(target)
                     .targetReferenceField(columnName)
                     .targetFields(target.listView().fields())
+                    .perPage(5)
+            )
+            fields.push(
+                nga.field('commands button', 'template')
+                    .label('')
+                    .template(`
+                        <ma-filtered-list-button
+                         entity-name="${tableName}"
+                         filter="{ ${columnName}: entry.values.id }"
+                        ></ma-filtered-list-button>
+                    `),
             )
         }
         entity.editionView().fields(fields)
