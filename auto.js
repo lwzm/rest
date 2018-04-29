@@ -109,9 +109,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
     nga.configure(admin)
 
-    const entities = {}
-    const definitions = {}
-    const customSettings = {}  // see table _meta
+    const tables = {}
+    const referencedListTodos = []
 
     // uri: /
     {
@@ -121,13 +120,18 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             throw resp
         }
 
-        Object.assign(definitions, JSON.parse(resp.response).definitions)
+        //Object.assign(definitions, JSON.parse(resp.response).definitions)
+        const definitions = JSON.parse(resp.response).definitions
 
         for (const tableName in definitions) {
-            customSettings[tableName] = {}
-            entities[tableName] = nga.entity(tableName)
+            const entity = nga.entity(tableName)
                 .updateMethod("patch")
                 .label(tableName)
+            tables[tableName] = {
+                entity,
+                customSettings: {},
+                properties: definitions[tableName].properties,
+            }
         }
     }
 
@@ -137,7 +141,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const meta = JSON.parse(resp.response)
         for (const i of meta) {
             const [table, column] = i.name.split(".")
-            customSettings[table][column] = i
+            tables[table].customSettings[column] = i
         }
     }
 
@@ -159,15 +163,15 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         }
     }
 
-    for (const tableName in definitions) {
-        const properties = definitions[tableName].properties
-        const entity = entities[tableName]
+    for (const tableName in tables) {
+        const table = tables[tableName]
+        const {entity, properties} = table
         const fields = []
 
         for (const columnName in properties) {
             const attr = properties[columnName]
             const desc = attr.description || ""
-            const setting = customSettings[tableName][columnName] || {}
+            const setting = table.customSettings[columnName] || {}
             /*
              * desc likes those:
              * "Note: This is a Primary Key.<pk/>"
@@ -192,9 +196,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 const [_0, fkTable, _2, fkColumn] = desc.slice(fkIdx).split("'")
                 field = nga.field(columnName, "reference")
                     .label(columnName)
-                    .targetEntity(entities[fkTable])
+                    .targetEntity(tables[fkTable].entity)
                     .targetField(nga.field(fkColumn))
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkColumn))
+                referencedListTodos.push({fkTable, tableName, columnName})
             } else if (setting.choices) {
                 field = nga.field(columnName, "choice").choices(
                     setting.choices.map((i) => ({value: i, label: i}))
@@ -244,9 +249,15 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     break
             }
         }
+        tables[tableName].fields = fields
+        tables[tableName].filters = filters
+    }
+
+    for (const tableName in tables) {
+        const {fields, filters, entity, customSettings} = tables[tableName]
 
         const fieldsForList = fields.filter(function (i) {
-            const meta = customSettings[tableName][i.name()]
+            const meta = customSettings[i.name()]
             if (meta && meta.hide) {
                 return false
             }
@@ -268,11 +279,26 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             .filter((i) => i.editable())
         entity.editionView().fields(fieldsForEdit)
         entity.creationView().fields(fieldsForCreate)
-
-        admin.addEntity(entity)
-        //console.log(tableName, definitions[tableName], entity)
     }
 
+    for (const {fkTable, tableName, columnName} of referencedListTodos) {
+        const entity = tables[fkTable].entity
+        const target = tables[tableName].entity
+
+        entity.editionView().fields([
+            nga.field(tableName, "referenced_list")
+                .targetEntity(target)
+                .targetReferenceField(columnName)
+                .targetFields(target.listView().fields())
+        ])
+    }
+
+    for (const tableName in tables) {
+        const {entity} = tables[tableName]
+        admin.addEntity(entity)
+    }
+
+    window.admin = admin
 }])
 
 !async function() {
