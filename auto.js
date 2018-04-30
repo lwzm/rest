@@ -6,11 +6,10 @@ import 'babel-polyfill'
 
 import cfg from "./cfg"
 
+const BasePath = "/api/"
+const PKS = {}
 const App = angular.module('myApp', ['ng-admin'])
 
-const BasePath = "/api/"
-
-const PKS = {}
 
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -110,7 +109,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     nga.configure(admin)
 
     const tables = {}
-    const referencedListTodos = []
 
     // uri: /
     {
