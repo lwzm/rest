@@ -6,10 +6,11 @@ import 'babel-polyfill'
 
 import cfg from "./cfg"
 
-const BasePath = "/api/"
-const PKS = {}
 const App = angular.module('myApp', ['ng-admin'])
 
+const BasePath = "/api/"
+
+const PKS = {}
 
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -19,26 +20,14 @@ function sleep (ms) {
 // https://ng-admin-book.marmelab.com/
 
 
-App.config(["$httpProvider", (http) => {
-    const myInterceptor = {
-        request: (config) => {
-            if (config.params && config.params.___strip_id_todo) {
-                delete config.params.___strip_id_todo
-                const url = config.url
-                config.url = url.slice(0, url.lastIndexOf("/"))
-            }
-            return config
-        },
-    }
-    http.interceptors.push(() => myInterceptor)
-}])
-
-
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
         switch (operation) {
+            case 'get':
+                data = data[0]
+                break
             case 'getList':
-                response.totalCount = response.headers('Content-Range').split('/')[1]
+                response.totalCount = 5000
                 break
         }
         return data
@@ -54,45 +43,21 @@ App.config(["RestangularProvider", (rest) => {
             case 'get':
             case 'patch':
             case 'remove':
-                headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = PKS[what]
-                const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
-                params[idKey] = `eq.${idValue}`
-                params.___strip_id_todo = true
                 break
             case 'getList':
-                headers['Prefer'] = "count=exact"
-
-                const filters = params._filters
-                delete params._filters
-
-                for (const key in filters) {
-                    let v = filters[key]
-                    if (v != null) {
-                        let [k, operator] = key.split("...")
-                        operator = operator || "eq"
-                        if (v instanceof Date) {
-                            v = v.toISOString()
-                        }
-                        params[k] = `${operator}.${v}`
-                    }
-                }
-
-                //headers['Range-Unit'] = what
-                const p = params._page
-                const u = params._perPage
-                headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
-                delete params._page
+                params._size = params._perPage
+                params._p = params._page
                 delete params._perPage
+                delete params._page
+
                 if (params._sortField) {
-                    const field = params._sortField
-                    if (field == "id" && PKS[what] != "id") {
-                        // pass, ignore field `id` that not exists
-                    } else {
-                        params.order = field + '.' + params._sortDir.toLowerCase()
+                    let sort = params._sortField
+                    if (params._sortDir == "DESC") {
+                        sort = '-' + sort
                     }
-                    delete params._sortField
+                    params._sort = sort
                     delete params._sortDir
+                    delete params._sortField
                 }
                 break
         }
@@ -102,242 +67,106 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
-    const admin = nga.application('base on postgrest')
+    const admin = nga.application('xmysql')
         .baseApiUrl(BasePath)
         .debug(false)
 
     nga.configure(admin)
+    admin.dashboard(nga.dashboard())
 
-    const tables = {}
-
-    // uri: /
-    {
-        const resp = $.ajax({url: BasePath, async: false})
-        if (resp.status > 200) {
-            alert(resp.status)
-            throw resp
-        }
-
-        //Object.assign(definitions, JSON.parse(resp.response).definitions)
-        const definitions = JSON.parse(resp.response).definitions
-
-        const fkRegExp = RegExp("<fk table='([^']+)' column='([^']+)'/>")
-
-        for (const tableName in definitions) {
-            const entity = nga.entity(tableName)
-                .updateMethod("patch")
-                .label(tableName)
-            const properties = definitions[tableName].properties
-            const fs = []
-            for (var columnName in properties) {
-                let attrs = properties[columnName]
-                let format = cfg.columnFormatMap[attrs.format] || "string"
-                /*
-                 * desc likes those:
-                 * "Note: This is a Primary Key.<pk/>"
-                 * "Note: This is a Foreign Key to `todos.id`.<fk table='todos' column='id'/>"
-                 */
-                let desc = attrs.description || ""
-                let pkFlag = desc.indexOf(".<pk") > -1
-                let fkInfo = fkRegExp.exec(desc)
-                if (fkInfo) {
-                    fkInfo = {
-                        tableName: fkInfo[1],
-                        columnName: fkInfo[2],
-                    }
-                }
-                fs.push({
-                    columnName,
-                    format,
-                    pkFlag,
-                    fkInfo,
-                })
-            }
-
-            tables[tableName] = {
-                entity,
-                fs,
-                settings: {},
-                relations: [],
-            }
-        }
+    //var u = nga.entity('h5_link');
+    const resp = $.ajax({url: "/schema.json", async: false})
+    if (resp.status > 200) {
+        alert(resp.status)
+        throw resp
     }
+    let re = /[a-zA-Z0-9_]/
 
-    // uri: /_meta
-    {
-        const resp = $.ajax({url: BasePath + "_meta", async: false})
-        const meta = JSON.parse(resp.response)
-        for (const i of meta) {
-            const [table, column] = i.name.split(".")
-            tables[table].settings[column] = i
-        }
-    }
+    const tables = JSON.parse(resp.response)
 
-    const remoteCompleteOptions = {
-        refreshDelay: 300,
-        searchQuery: function (search) {
-            return {
-                "id": search,
-            }
-        },
-    }
-
-    function remoteCompleteOptionsFactory(key) {
-        return {
-            refreshDelay: 300,
-            searchQuery: (search) => ({
-                [key]: search,
-            }),
-        }
-    }
-
+    let entities = {}
 
     for (const tableName in tables) {
-        const table = tables[tableName]
-        const {entity, fs, settings} = table
+        const describe = tables[tableName]
+
+        const entity = nga.entity(tableName)
+            .updateMethod("patch")
+            .label(tableName)
+
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo} of fs) {
-            const meta = settings[columnName] || {}
+        for (const info of describe) {
+            //console.log(info)
+            let type = info.Type
+            let columnName = info.Field
+            if (type.indexOf("int") > -1) {
+                type = "number"
+            } else if (type.indexOf("char") > -1) {
+                type = "string"
+            } else if (type.indexOf("enum") > -1) {
+                type = "string"
+            } else if (type.indexOf("text") > -1) {
+                type = "text"
+            } else if (type.indexOf("double") > -1) {
+                type = "float"
+            } else if (type == "datetime") {
+                type = "datetime"
+            } else if (type == "timestamp") {
+                type = "datetime"
+            } else if (type == "date") {
+                type = "date"
+            } else {
+                console.log(tableName, columnName, type)
+                type = "string"
+            }
             let field
-
-            if (pkFlag) {
-                field = nga.field(columnName, format)
+            if (info.Key == "PRI") {
+                const pk = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
                     .label(columnName)
-                entity.identifier(field)
+                entity.identifier(pk)
                 entity.listView().sortField(columnName)
-                PKS[tableName] = columnName
-            } else if (fkInfo) {
-                const fkTable = tables[fkInfo.tableName]
-                fkTable.relations.push({tableName, columnName})
-                field = nga.field(columnName, "reference")
-                    .label(columnName)
-                    .targetEntity(fkTable.entity)
-                    .targetField(nga.field(fkInfo.columnName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
-            } else if (meta.choices) {
-                field = nga.field(columnName, "choice").choices(
-                    meta.choices.map((i) => ({value: i, label: i}))
-                ).label(columnName)
+                field = pk
             } else {
-                field = nga.field(columnName, format).label(columnName)
+                field = nga.field(columnName, type).label(columnName)
+            }
+            if (info.ro) {
+                field.editable(false)
             }
 
-            if (meta.readonly) {
-                field = field.editable(false)
+            if (!columnName.endsWith("_time")) {
+                fields.push(field)
             }
 
-            fields.push(field)
         }
-
-        const filters = []
-        for (const field of fields) {
-            const name = field.name()
-            const type = field.type()
-            switch (type) {
-                case 'number':
-                case 'float':
-                case 'date':
-                case 'datetime':
-                    filters.push(field)
-                    filters.push(
-                        nga.field(`${name}...gte`, type)
-                        .label(`${name} >=`)
-                    )
-                    filters.push(
-                        nga.field(`${name}...lte`, type)
-                        .label(`${name} <=`)
-                    )
-                    break
-                case 'string':
-                case 'text':
-                case 'wysiwyg':
-                case 'email':
-                    filters.push(
-                        nga.field(`${name}...like`, type)
-                        .label(`${name} ~=`)
-                    )
-                    break
-                default:
-                    filters.push(field)
-                    break
-            }
-        }
-        Object.assign(table, {fields, filters})
-    }
-
-    for (const tableName in tables) {
-        const {fields, filters, entity, settings} = tables[tableName]
-
-        const fieldsForList = fields.filter(function (i) {
-            const meta = settings[i.name()]
-            if (meta && meta.hide) {
-                return false
-            }
-            return true
-        })
 
         entity.listView()
-            .fields(fieldsForList)
+            .fields(fields)
             .exportFields(fields)
-            .filters(filters)
-            .perPage(10)
+            .perPage(50)
             //.title(tableName)
             //.sortDir("ASC")
             //.infinitePagination(true)
 
         const fieldsForEdit = fields
-            .filter((i) => !(i.name() == "id" && i.type() == "number"))
+            .filter((i) => {
+                if (i.name() == "id" && i.type() == "number") {
+                    return
+                }
+                if (i.name().endsWith("_time")) {
+                    return
+                }
+                return true
+            })
+
         const fieldsForCreate = fieldsForEdit
-            .filter((i) => i.editable())
+        //.filter((i) => i.editable())
         entity.editionView().fields(fieldsForEdit)
         entity.creationView().fields(fieldsForCreate)
-    }
 
-    for (const tableName in tables) {
-        const {entity, relations} = tables[tableName]
-        const fields = []
-        for (const {tableName, columnName} of relations) {
-            const target = tables[tableName].entity
-            fields.push(
-                nga.field(tableName, "referenced_list")
-                    .targetEntity(target)
-                    .targetReferenceField(columnName)
-                    .targetFields(target.listView().fields())
-                    .label(tableName)
-                    .perPage(5)
-            )
-            fields.push(
-                nga.field('commands button', 'template')
-                    .label('')
-                    .template(`
-                        <ma-filtered-list-button
-                         entity-name="${tableName}"
-                         filter="{ ${columnName}: entry.values.id }"
-                        ></ma-filtered-list-button>
-                    `),
-            )
-        }
-        entity.editionView().fields(fields)
-    }
-
-    for (const tableName in tables) {
-        const {entity} = tables[tableName]
         admin.addEntity(entity)
-    }
+    } 
 
-    window.admin = admin
+
 }])
-
-!async function() {
-    await sleep(1000)
-    //let resp = await fetch("http://ip.tyio.net")
-    //let text = await resp.text()
-    //console.log(text)
-}()
-
-class T {
-    a = 1
-}
