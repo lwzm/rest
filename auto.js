@@ -148,7 +148,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         refreshDelay: 300,
         searchQuery: function (search) {
             return {
-                'id...eq': search,
+                "id": search,
             }
         },
     }
@@ -157,10 +157,12 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         return {
             refreshDelay: 300,
             searchQuery: (search) => ({
-                [`${key}...eq`]: search,
+                [key]: search,
             }),
         }
     }
+
+    const fkReg = RegExp("<fk table='([^']+)' column='([^']+)'/>")
 
     for (const tableName in tables) {
         const table = tables[tableName]
@@ -192,7 +194,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 PKS[tableName] = columnName
                 field = pk
             } else if (fkIdx > -1) {
-                const [_0, fkTableName, _2, fkColumnName] = desc.slice(fkIdx).split("'")
+                const [_0, fkTableName, fkColumnName] = fkReg.exec(desc)
                 const fkTable = tables[fkTableName]
                 fkTable.referencedList.push({tableName, columnName})
                 field = nga.field(columnName, "reference")
