@@ -121,15 +121,44 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         //Object.assign(definitions, JSON.parse(resp.response).definitions)
         const definitions = JSON.parse(resp.response).definitions
 
+        const fkRegExp = RegExp("<fk table='([^']+)' column='([^']+)'/>")
+
         for (const tableName in definitions) {
             const entity = nga.entity(tableName)
                 .updateMethod("patch")
                 .label(tableName)
+            const properties = definitions[tableName].properties
+            const fs = []
+            for (var columnName in properties) {
+                let attrs = properties[columnName]
+                let format = cfg.columnFormatMap[attrs.format] || "string"
+                /*
+                 * desc likes those:
+                 * "Note: This is a Primary Key.<pk/>"
+                 * "Note: This is a Foreign Key to `todos.id`.<fk table='todos' column='id'/>"
+                 */
+                let desc = attrs.description || ""
+                let pkFlag = desc.indexOf(".<pk") > -1
+                let fkInfo = fkRegExp.exec(desc)
+                if (fkInfo) {
+                    fkInfo = {
+                        tableName: fkInfo[1],
+                        columnName: fkInfo[2],
+                    }
+                }
+                fs.push({
+                    columnName,
+                    format,
+                    pkFlag,
+                    fkInfo,
+                })
+            }
+
             tables[tableName] = {
                 entity,
-                properties: definitions[tableName].properties,
-                customSettings: {},
-                referencedList: [],
+                fs,
+                settings: {},
+                relations: [],
             }
         }
     }
@@ -140,7 +169,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const meta = JSON.parse(resp.response)
         for (const i of meta) {
             const [table, column] = i.name.split(".")
-            tables[table].customSettings[column] = i
+            tables[table].settings[column] = i
         }
     }
 
@@ -162,60 +191,45 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         }
     }
 
-    const fkReg = RegExp("<fk table='([^']+)' column='([^']+)'/>")
 
     for (const tableName in tables) {
         const table = tables[tableName]
-        const {entity, properties} = table
+        const {entity, fs, settings} = table
         const fields = []
 
-        for (const columnName in properties) {
-            const attr = properties[columnName]
-            const desc = attr.description || ""
-            const setting = table.customSettings[columnName] || {}
-            /*
-             * desc likes those:
-             * "Note: This is a Primary Key.<pk/>"
-             * "Note: This is a Foreign Key to `todos.id`.<fk table='todos' column='id'/>"
-             */
-            const pkIdx = desc.indexOf(".<pk")
-            const fkIdx = desc.indexOf(".<fk")
-            const type = setting.type || cfg.columnFormatMap[attr.format] || "string"
-
+        for (const {columnName, format, pkFlag, fkInfo} of fs) {
+            const meta = settings[columnName] || {}
             let field
 
-            if (pkIdx > -1) {
-                const pk = nga.field(columnName, type)
+            if (pkFlag) {
+                field = nga.field(columnName, format)
                     .isDetailLink(true)
                     .pinned(true)
                     .label(columnName)
-                entity.identifier(pk)
+                entity.identifier(field)
                 entity.listView().sortField(columnName)
                 PKS[tableName] = columnName
-                field = pk
-            } else if (fkIdx > -1) {
-                const [_0, fkTableName, fkColumnName] = fkReg.exec(desc)
-                const fkTable = tables[fkTableName]
-                fkTable.referencedList.push({tableName, columnName})
+            } else if (fkInfo) {
+                const fkTable = tables[fkInfo.tableName]
+                fkTable.relations.push({tableName, columnName})
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkTable.entity)
-                    .targetField(nga.field(fkColumnName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkColumnName))
-            } else if (setting.choices) {
+                    .targetField(nga.field(fkInfo.columnName))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
+            } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
-                    setting.choices.map((i) => ({value: i, label: i}))
+                    meta.choices.map((i) => ({value: i, label: i}))
                 ).label(columnName)
             } else {
-                field = nga.field(columnName, type).label(columnName)
+                field = nga.field(columnName, format).label(columnName)
             }
 
-            if (setting.readonly) {
+            if (meta.readonly) {
                 field = field.editable(false)
             }
 
             fields.push(field)
-
         }
 
         const filters = []
@@ -255,10 +269,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     }
 
     for (const tableName in tables) {
-        const {fields, filters, entity, customSettings} = tables[tableName]
+        const {fields, filters, entity, settings} = tables[tableName]
 
         const fieldsForList = fields.filter(function (i) {
-            const meta = customSettings[i.name()]
+            const meta = settings[i.name()]
             if (meta && meta.hide) {
                 return false
             }
@@ -283,9 +297,9 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     }
 
     for (const tableName in tables) {
-        const {entity, referencedList} = tables[tableName]
+        const {entity, relations} = tables[tableName]
         const fields = []
-        for (const {tableName, columnName} of referencedList) {
+        for (const {tableName, columnName} of relations) {
             const target = tables[tableName].entity
             fields.push(
                 nga.field(tableName, "referenced_list")
