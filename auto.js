@@ -42,9 +42,35 @@ App.config(["RestangularProvider", (rest) => {
         switch (operation) {
             case 'get':
             case 'patch':
+                console.log(params);
+                console.log(element);
+                for (const k of Object.keys(element)) {
+                    if (k.endsWith("_time")) {
+                        delete element[k]
+                    }
+                }
             case 'remove':
                 break
             case 'getList':
+
+                const filters = params._filters
+                delete params._filters
+
+                const _where = []
+
+                for (const key in filters) {
+                    let v = filters[key]
+                    if (v != null) {
+                        let [k, operator] = key.split("...")
+                        operator = operator || "eq"
+                        if (v instanceof Date) {
+                            v = v.toISOString()
+                        }
+                        _where.push(`(${k},${operator},${v})`)
+                    }
+                }
+                params._where = _where.join("~and")
+
                 params._size = params._perPage
                 params._p = params._page
                 delete params._perPage
@@ -135,14 +161,48 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 field.editable(false)
             }
 
-            if (!columnName.endsWith("_time")) {
+            if (!(columnName.endsWith("e_time") || columnName.endsWith("password"))) {
                 fields.push(field)
             }
 
         }
+        const filters = []
+        for (const field of fields) {
+            const name = field.name()
+            const type = field.type()
+            switch (type) {
+                case 'number':
+                case 'float':
+                case 'date':
+                case 'datetime':
+                    filters.push(field)
+                    //filters.push(
+                        //nga.field(`${name}...gte`, type)
+                        //.label(`${name} >=`)
+                    //)
+                    //filters.push(
+                        //nga.field(`${name}...lte`, type)
+                        //.label(`${name} <=`)
+                    //)
+                    break
+                case 'string':
+                case 'text':
+                case 'wysiwyg':
+                case 'email':
+                    filters.push(
+                        nga.field(`${name}...like`, type)
+                        .label(`${name} ~=`)
+                    )
+                    break
+                default:
+                    filters.push(field)
+                    break
+            }
+        }
 
         entity.listView()
             .fields(fields)
+            .filters(filters)
             .exportFields(fields)
             .perPage(50)
             //.title(tableName)
