@@ -204,14 +204,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 case 'date':
                 case 'datetime':
                     filters.push(field)
-                    //filters.push(
-                        //nga.field(`${name}...gte`, type)
-                        //.label(`${name} >=`)
-                    //)
-                    //filters.push(
-                        //nga.field(`${name}...lte`, type)
-                        //.label(`${name} <=`)
-                    //)
+                    filters.push(
+                        nga.field(`${name}...gt`, type)
+                        .label(`${name} >`)
+                    )
+                    filters.push(
+                        nga.field(`${name}...lt`, type)
+                        .label(`${name} <`)
+                    )
                     break
                 case 'string':
                 case 'text':
