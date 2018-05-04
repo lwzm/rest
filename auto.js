@@ -42,8 +42,6 @@ App.config(["RestangularProvider", (rest) => {
         switch (operation) {
             case 'get':
             case 'patch':
-                console.log(params);
-                console.log(element);
                 for (const k of Object.keys(element)) {
                     if (k.endsWith("_time")) {
                         delete element[k]
@@ -108,16 +106,29 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     }
     let re = /[a-zA-Z0-9_]/
 
-    const tables = JSON.parse(resp.response)
+    const tableInfos = JSON.parse(resp.response)
+    const relations = []
+    const tables = {}
 
-    let entities = {}
-
-    for (const tableName in tables) {
-        const describe = tables[tableName]
-
+    for (const tableName in tableInfos) {
         const entity = nga.entity(tableName)
             .updateMethod("patch")
             .label(tableName)
+        tables[tableName] = entity
+    }
+
+    function remoteCompleteOptionsFactory(key) {
+        return {
+            refreshDelay: 300,
+            searchQuery: (search) => ({
+                [key]: search,
+            }),
+        }
+    }
+
+    for (const tableName in tableInfos) {
+        const describe = tableInfos[tableName]
+        const entity = tables[tableName]
 
         const fields = []
 
@@ -125,6 +136,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             //console.log(info)
             let type = info.Type
             let columnName = info.Field
+            let fk = info.fk
             if (type.indexOf("int") > -1) {
                 type = "number"
             } else if (type.indexOf("char") > -1) {
@@ -154,10 +166,26 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 entity.identifier(pk)
                 entity.listView().sortField(columnName)
                 field = pk
+            } else if (fk) {
+                const [fkTableName, fkColumnName] = fk
+                field = nga.field(columnName, "reference")
+                    .label(columnName)
+                    .targetEntity(tables[fkTableName])
+                    .targetField(nga.field(fkColumnName))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkColumnName))
+                relations.push({
+                    entity,
+                    columnName,
+                    fkTableName,
+                    fkColumnName,
+                })
             } else {
                 field = nga.field(columnName, type).label(columnName)
             }
             if (info.ro) {
+                field.editable(false)
+            }
+            if (columnName == "id") {
                 field.editable(false)
             }
 
@@ -212,7 +240,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const fieldsForEdit = fields
             .filter((i) => {
                 if (i.name() == "id" && i.type() == "number") {
-                    return
+                    return true
                 }
                 if (i.name().endsWith("_time")) {
                     return
@@ -225,8 +253,25 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         entity.editionView().fields(fieldsForEdit)
         entity.creationView().fields(fieldsForCreate)
 
-        admin.addEntity(entity)
+                    
     } 
+
+            console.log(relations);
+        for (const {entity, columnName, fkTableName, fkColumnName} of relations) {
+            const target = tables[fkTableName]
+            target.editionView().fields([
+                nga.field(fkColumnName, "referenced_list")
+                    .targetEntity(entity)
+                    .targetReferenceField(columnName)
+                    .targetFields(entity.listView().fields())
+                    .label(fkTableName)
+                    .perPage(5)
+            ])
+        }
+
+    for (const name in tables) {
+        admin.addEntity(tables[name])
+    }
 
 
 }])
