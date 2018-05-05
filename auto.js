@@ -264,7 +264,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     .targetEntity(entity)
                     .targetReferenceField(columnName)
                     .targetFields(entity.listView().fields())
-                    .label(fkTableName)
+                    .label(entity.name())
                     .perPage(5)
             ])
         }
