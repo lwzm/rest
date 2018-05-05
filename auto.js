@@ -88,6 +88,11 @@ App.config(["RestangularProvider", (rest) => {
     })
 }])
 
+const dict = {}
+
+function trans(org) {
+    return dict(org) || org
+}
 
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
@@ -104,7 +109,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         alert(resp.status)
         throw resp
     }
-    let re = /[a-zA-Z0-9_]/
+
+    if (true) {
+        const resp = $.ajax({url: "/trans.json", async: false})
+        if (resp.status > 200) {
+            Object.assign(dict, JSON.parse(resp.response))
+        }
+    }
+
 
     const tableInfos = JSON.parse(resp.response)
     const relations = []
@@ -113,7 +125,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     for (const tableName in tableInfos) {
         const entity = nga.entity(tableName)
             .updateMethod("patch")
-            .label(tableName)
+            .label(trans(tableName))
         tables[tableName] = entity
     }
 
@@ -162,14 +174,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 const pk = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
-                    .label(columnName)
+                    .label(trans(columnName))
                 entity.identifier(pk)
                 entity.listView().sortField(columnName)
                 field = pk
             } else if (fk) {
                 const [fkTableName, fkColumnName] = fk
                 field = nga.field(columnName, "reference")
-                    .label(columnName)
+                    .label(trans(columnName))
                     .targetEntity(tables[fkTableName])
                     .targetField(nga.field(fkColumnName))
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkColumnName))
@@ -180,7 +192,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     fkColumnName,
                 })
             } else {
-                field = nga.field(columnName, type).label(columnName)
+                field = nga.field(columnName, type)
+                    .label(trans(columnName))
             }
             if (info.ro) {
                 field.editable(false)
@@ -206,11 +219,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     filters.push(field)
                     filters.push(
                         nga.field(`${name}...gt`, type)
-                        .label(`${name} >`)
+                        .label(`${trans(name)} >`)
                     )
                     filters.push(
                         nga.field(`${name}...lt`, type)
-                        .label(`${name} <`)
+                        .label(`${trans(name)} <`)
                     )
                     break
                 case 'string':
@@ -219,7 +232,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 case 'email':
                     filters.push(
                         nga.field(`${name}...like`, type)
-                        .label(`${name} ~=`)
+                        .label(`${trans(name)} ~`)
                     )
                     break
                 default:
@@ -264,7 +277,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     .targetEntity(entity)
                     .targetReferenceField(columnName)
                     .targetFields(entity.listView().fields())
-                    .label(entity.name())
+                    .label(trans(entity.name()))
                     .perPage(5)
             ])
         }
