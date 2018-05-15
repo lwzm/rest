@@ -8,7 +8,7 @@ import cfg from "./cfg"
 
 const BasePath = "/api/"
 const PKS = {}
-const App = angular.module('myApp', ['ng-admin'])
+const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
 
 
 function sleep (ms) {
@@ -17,6 +17,13 @@ function sleep (ms) {
 
 // See:
 // https://ng-admin-book.marmelab.com/
+
+
+// https://ng-admin-book.marmelab.com/doc/Translation.html
+App.config(['$translateProvider', function ($translateProvider) {
+  $translateProvider.translations('zh', cfg.translations);
+  $translateProvider.preferredLanguage('zh');
+}]);
 
 
 App.config(["$httpProvider", (http) => {
