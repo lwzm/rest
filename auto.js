@@ -282,6 +282,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     break
             }
         }
+
+        for (const filter of filters) {
+            if (filter.name() == "id") {
+                filter.pinned(true)
+                break
+            }
+        }
+
         Object.assign(table, {fields, filters})
     }
 
