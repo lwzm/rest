@@ -176,7 +176,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const meta = JSON.parse(resp.response)
         for (const i of meta) {
             const [table, column] = i.name.split(".")
-            tables[table].settings[column] = i
+            const t = tables[table]
+            if (t) {
+                t.settings[column] = i
+            }
         }
     }
 
@@ -204,12 +207,16 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         const {entity, fs, settings} = table
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo} of fs) {
+        for (let {columnName, format, pkFlag, fkInfo} of fs) {
             const meta = settings[columnName] || {}
             let field
+            
+            if (meta.type) {
+                format = meta.type  //todo: rename type to format
+            }
 
             if (pkFlag) {
-                field = nga.field(columnName, format)
+                field = nga.field(columnName, meta.type || format)
                     .isDetailLink(true)
                     .pinned(true)
                     .label(columnName)
@@ -267,7 +274,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 case 'email':
                     filters.push(
                         nga.field(`${name}...like`, type)
-                        .label(`${name} ~=`)
+                        .label(`${name} ~`)
                     )
                     break
                 default:

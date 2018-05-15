@@ -65,6 +65,35 @@ const columnFormatMap = {
     "numeric": "float",
 }
 
+!function () {
+    const other = {
+        'resume': '简历',
+        "name": "名字",
+        "mobile": "联系电话",
+        "sex": "性别",
+        "ethnic": "民族",
+        "education": "学历",
+        "job_years": "工作时间",
+        "desc_edu_exp": "教育经历",
+        "desc_job_exp": "工作经历",
+        "ctime": "创建时间",
+    }
+
+    const other2 = {
+    }
+
+    for (const key in other) {
+        const value = other[key]
+        other2[`${key} >`] = `${value} 大于`
+        other2[`${key} <`] = `${value} 小于`
+        other2[`${key} =`] = `${value} 等于`
+        other2[`${key} ~`] = `${value} 匹配`
+    }
+
+    Object.assign(translations, other)
+    Object.assign(translations, other2)
+}()
+
 export default {
     translations,
     columnFormatMap,
