@@ -274,11 +274,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 case 'email':
                     filters.push(
                         nga.field(`${name}...like`, type)
-                        .label(`${name} ~`)
+                            .label(`${name} ~`)
                     )
                     break
                 default:
-                    filters.push(field)
+                    filters.push(
+                        nga.field(name, type)
+                            .label(`${name} =`)
+                    )
                     break
             }
         }
@@ -289,6 +292,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                 break
             }
         }
+        filters.sort((a, b) => a.name() < b.name() ? 1 : -1)
 
         Object.assign(table, {fields, filters})
     }

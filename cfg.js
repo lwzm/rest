@@ -84,10 +84,10 @@ const columnFormatMap = {
 
     for (const key in other) {
         const value = other[key]
-        other2[`${key} >`] = `${value} 大于`
-        other2[`${key} <`] = `${value} 小于`
-        other2[`${key} =`] = `${value} 等于`
-        other2[`${key} ~`] = `${value} 匹配`
+        other2[`${key} >`] = `${value} >`
+        other2[`${key} <`] = `${value} <`
+        other2[`${key} =`] = `${value} =`
+        other2[`${key} ~`] = `${value} ~`
     }
 
     Object.assign(translations, other)
