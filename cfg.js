@@ -76,6 +76,7 @@ const columnFormatMap = {
         "job_years": "工作时间",
         "desc_edu_exp": "教育经历",
         "desc_job_exp": "工作经历",
+        "source": "来源",
         "ctime": "创建时间",
     }
 
