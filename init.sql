@@ -12,6 +12,7 @@ create table api._meta (
     name varchar(32) primary key,
     type varchar(16),
     choices jsonb,  -- this is an array
+    pinned boolean,
     readonly boolean,
     hide boolean
 );

@@ -217,12 +217,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             const meta = settings[columnName] || {}
             let field
             
-            if (meta.type) {
-                format = meta.type  //todo: rename type to format
-            }
+            format = meta.type || format
 
             if (pkFlag) {
-                field = nga.field(columnName, meta.type || format)
+                field = nga.field(columnName, format)
                     .isDetailLink(true)
                     .pinned(true)
                     .label(columnName)
@@ -264,6 +262,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     filters.push(
                         nga.field(name, type)
                             .label(`${name} =`)
+                            .pinned(field.pinned())
                     )
                     filters.push(
                         nga.field(`${name}...gt`, type)
@@ -281,23 +280,19 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     filters.push(
                         nga.field(`${name}...like`, type)
                             .label(`${name} ~`)
+                            .pinned(field.pinned())
                     )
                     break
                 default:
                     filters.push(
                         nga.field(name, type)
                             .label(`${name} =`)
+                            .pinned(field.pinned())
                     )
                     break
             }
         }
 
-        for (const filter of filters) {
-            if (filter.name() == "id") {
-                filter.pinned(true)
-                break
-            }
-        }
         filters.sort((a, b) => a.name() < b.name() ? 1 : -1)
 
         Object.assign(table, {fields, filters})
