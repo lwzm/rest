@@ -55,16 +55,6 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
-        headers = headers || {}
-
-        if (element) {
-            delete element.id
-            for (const [k, v] of Object.entries(element)) {
-                if (v === null) {
-                    delete element[k]
-                }
-            }
-        }
 
         switch (operation) {
             case 'get':
@@ -76,6 +66,13 @@ App.config(["RestangularProvider", (rest) => {
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
                 break
+            case 'post':
+                delete element.id
+                for (const [k, v] of Object.entries(element)) {
+                    if (v === null) {
+                        delete element[k]
+                    }
+                }
             case 'getList':
                 headers['Prefer'] = "count=exact"
 
