@@ -244,7 +244,11 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
             }
 
             if (meta.readonly) {
-                field = field.editable(false)
+                field.editable(false)
+            }
+
+            if (meta.pinned) {
+                field.pinned(true)
             }
 
             fields.push(field)
@@ -254,6 +258,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         for (const field of fields) {
             const name = field.name()
             const type = field.type()
+            const pinned = field.pinned()
             switch (type) {
                 case 'number':
                 case 'float':
@@ -262,7 +267,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     filters.push(
                         nga.field(name, type)
                             .label(`${name} =`)
-                            .pinned(field.pinned())
+                            .pinned(pinned)
                     )
                     filters.push(
                         nga.field(`${name}...gt`, type)
@@ -280,14 +285,14 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
                     filters.push(
                         nga.field(`${name}...like`, type)
                             .label(`${name} ~`)
-                            .pinned(field.pinned())
+                            .pinned(pinned)
                     )
                     break
                 default:
                     filters.push(
                         nga.field(name, type)
                             .label(`${name} =`)
-                            .pinned(field.pinned())
+                            .pinned(pinned)
                     )
                     break
             }
