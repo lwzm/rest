@@ -115,16 +115,21 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
-    const admin = nga.application('base on postgrest')
+    const admin = nga.application('_')
         .baseApiUrl(BasePath)
         .debug(false)
 
     nga.configure(admin)
 
+    init(nga, admin)
+
+}])
+
+function init(nga, admin) {
     const tables = {}
 
     // uri: /
-    {
+    if (true) {
         const resp = $.ajax({url: BasePath, async: false})
         if (resp.status > 200) {
             alert(resp.status)
@@ -364,7 +369,8 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     }
 
     window.admin = admin
-}])
+}
+
 
 !async function() {
     await sleep(1000)
