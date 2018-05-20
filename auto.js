@@ -293,6 +293,16 @@ function init(nga, admin) {
                             .pinned(pinned)
                     )
                     break
+                case 'reference':
+                    console.log(field);
+                    filters.push(
+                        nga.field(name, type)
+                            .label(`${name} =`)
+                            .pinned(pinned)
+                            .targetEntity(field.targetEntity())
+                            .targetField(field.targetField())
+                    )
+                    break
                 default:
                     filters.push(
                         nga.field(name, type)
