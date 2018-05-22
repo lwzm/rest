@@ -42,29 +42,6 @@ const translations = {
     'NOT_FOUND_DETAILS': 'The page you are looking for cannot be found. Take a break before trying again.',
 }
 
-const columnFormatMap = {
-    "integer": "number",
-    "smallint": "number",
-    "bigint": "number",
-
-    "jsonb": "json",
-    "json": "json",
-
-    "text": "text",
-    "character varying": "string",
-    "character": "string",
-
-    "boolean": "boolean",
-
-    "timestamp without time zone": "datetime",
-    "timestamp with time zone": "datetime",
-    "date": "date",
-
-    "double precision": "float",
-    "real": "float",
-    "numeric": "float",
-}
-
 !function () {
     const other = {
         'resume': '简历',
@@ -97,5 +74,4 @@ const columnFormatMap = {
 
 export default {
     translations,
-    columnFormatMap,
 }
