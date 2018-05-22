@@ -5,6 +5,7 @@ import 'babel-polyfill'
 */
 
 import cfg from "./cfg"
+import definitions from "./definitions"
 
 const BasePath = "/api/"
 const PKS = {}
@@ -126,73 +127,31 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 }])
 
 function init(nga, admin) {
-    const tables = {}
+    const tables = []
+    const relations = []
+    const entities = {}
+    const metas = {}
 
     // uri: /
-    if (true) {
-        const resp = $.ajax({url: BasePath, async: false})
-        if (resp.status > 200) {
-            alert(resp.status)
-            throw resp
-        }
-
-        //Object.assign(definitions, JSON.parse(resp.response).definitions)
-        const definitions = JSON.parse(resp.response).definitions
-
-        const fkRegExp = RegExp("<fk table='([^']+)' column='([^']+)'/>")
-
-        for (const tableName in definitions) {
-            const entity = nga.entity(tableName)
-                .updateMethod("patch")
-                .label(tableName)
-            const properties = definitions[tableName].properties
-            const fs = []
-            for (var columnName in properties) {
-                let attrs = properties[columnName]
-                let format = cfg.columnFormatMap[attrs.format] || "string"
-                /*
-                 * desc likes those:
-                 * "Note: This is a Primary Key.<pk/>"
-                 * "Note: This is a Foreign Key to `todos.id`.<fk table='todos' column='id'/>"
-                 */
-                let desc = attrs.description || ""
-                let pkFlag = desc.indexOf(".<pk") > -1
-                let fkInfo = fkRegExp.exec(desc)
-                if (fkInfo) {
-                    fkInfo = {
-                        tableName: fkInfo[1],
-                        columnName: fkInfo[2],
-                    }
-                }
-                fs.push({
-                    columnName,
-                    format,
-                    pkFlag,
-                    fkInfo,
-                })
-            }
-
-            tables[tableName] = {
-                entity,
-                fs,
-                settings: {},
-                relations: [],
-            }
-        }
+    for (const i of definitions) {
+        const entity = nga.entity(i.tableName)
+            .updateMethod("patch")
+            .label(i.tableName)
+        entities[i.tableName] = entity
+        tables.push(Object.assign({entity}, i))
     }
 
     // uri: /_meta
-    {
+    try {
         const resp = $.ajax({url: BasePath + "_meta", async: false})
         const meta = JSON.parse(resp.response)
         for (const i of meta) {
-            const [table, column] = i.name.split(".")
-            const t = tables[table]
-            if (t) {
-                t.settings[column] = i
-            }
+            metas[i.name] = i
         }
+    } catch (e) {
+        console.error(e)
     }
+
 
     const remoteCompleteOptions = {
         refreshDelay: 300,
@@ -213,19 +172,18 @@ function init(nga, admin) {
     }
 
 
-    for (const tableName in tables) {
-        const table = tables[tableName]
-        const {entity, fs, settings} = table
+    for (const table of tables) {
+        const {tableName, entity, fs} = table
         const fields = []
 
-        for (let {columnName, format, pkFlag, fkInfo} of fs) {
-            const meta = settings[columnName] || {}
+        for (const {columnName, format, pkFlag, fkInfo} of fs) {
+            const meta = metas[`${tableName}.${columnName}`] || {}
             let field
             
-            format = meta.type || format
+            const type = meta.type || format
 
             if (pkFlag) {
-                field = nga.field(columnName, format)
+                field = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
                     .label(columnName)
@@ -233,11 +191,11 @@ function init(nga, admin) {
                 entity.listView().sortField(columnName)
                 PKS[tableName] = columnName
             } else if (fkInfo) {
-                const fkTable = tables[fkInfo.tableName]
-                fkTable.relations.push({tableName, columnName})
+                const fkEntity = entities[fkInfo.tableName]
+                relations.push({fkEntity, entity, tableName, columnName})
                 field = nga.field(columnName, "reference")
                     .label(columnName)
-                    .targetEntity(fkTable.entity)
+                    .targetEntity(fkEntity)
                     .targetField(nga.field(fkInfo.columnName))
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
             } else if (meta.choices) {
@@ -245,7 +203,7 @@ function init(nga, admin) {
                     meta.choices.map((i) => ({value: i, label: i}))
                 ).label(columnName)
             } else {
-                field = nga.field(columnName, format).label(columnName)
+                field = nga.field(columnName, type).label(columnName)
             }
 
             if (meta.readonly) {
@@ -294,7 +252,6 @@ function init(nga, admin) {
                     )
                     break
                 case 'reference':
-                    console.log(field);
                     filters.push(
                         nga.field(name, type)
                             .label(`${name} =`)
@@ -318,11 +275,11 @@ function init(nga, admin) {
         Object.assign(table, {fields, filters})
     }
 
-    for (const tableName in tables) {
-        const {fields, filters, entity, settings} = tables[tableName]
 
+    for (const {entity, tableName, fields, filters} of tables) {
         const fieldsForList = fields.filter(function (i) {
-            const meta = settings[i.name()]
+            const columnName = i.name()
+            const meta = metas[`${tableName}.${columnName}`]
             if (meta && meta.hide) {
                 return false
             }
@@ -346,35 +303,31 @@ function init(nga, admin) {
         entity.creationView().fields(fieldsForCreate)
     }
 
-    for (const tableName in tables) {
-        const {entity, relations} = tables[tableName]
-        const fields = []
-        for (const {tableName, columnName} of relations) {
-            const target = tables[tableName].entity
-            fields.push(
-                nga.field(tableName, "referenced_list")
-                    .targetEntity(target)
-                    .targetReferenceField(columnName)
-                    .targetFields(target.listView().fields())
-                    .label(tableName)
-                    .perPage(5)
-            )
-            fields.push(
-                nga.field('commands button', 'template')
-                    .label('')
-                    .template(`
-                        <ma-filtered-list-button
-                         entity-name="${tableName}"
-                         filter="{ ${columnName}: entry.values.id }"
-                        ></ma-filtered-list-button>
-                    `),
-            )
-        }
-        entity.editionView().fields(fields)
+
+    for (const {fkEntity, entity, tableName, columnName} of relations) {
+        const fields = [
+            nga.field(tableName, "referenced_list")
+                .targetEntity(entity)
+                .targetReferenceField(columnName)
+                .targetFields(entity.listView().fields())
+                .label(tableName)
+                .perPage(5)
+            ,
+            nga.field('commands button', 'template')
+                .label('')
+                .template(`
+                    <ma-filtered-list-button
+                        entity-name="${tableName}"
+                        filter="{ ${columnName}: entry.values.id }"
+                    ></ma-filtered-list-button>
+                `)
+            ,
+        ]
+        fkEntity.editionView().fields(fields)
     }
 
-    for (const tableName in tables) {
-        const {entity} = tables[tableName]
+
+    for (const {entity} of tables) {
         admin.addEntity(entity)
     }
 
