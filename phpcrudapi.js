@@ -89,6 +89,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         .debug(false)
 
     nga.configure(admin)
+    admin.dashboard(nga.dashboard())
 
     init(nga, admin)
 
