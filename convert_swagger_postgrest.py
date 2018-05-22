@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-
-import collections
-import time
 import json
 import re
 
 import requests
+
 
 columnFormatMap = {
 
@@ -31,6 +29,7 @@ columnFormatMap = {
     "real": "float",
     "numeric": "float",
 }
+
 
 def main():
     data = requests.get("http://localhost:3000/").json()
