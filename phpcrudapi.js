@@ -25,9 +25,6 @@ App.config(['$translateProvider', function ($translateProvider) {
 }]);
 
 
-App.config(["$httpProvider", (http) => {
-}])
-
 
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((element, operation, what, url, response, deferred) => {
@@ -72,11 +69,16 @@ App.config(["RestangularProvider", (rest) => {
                 delete params._perPage
             }
 
-            const field = params._sortField
-            const dir = params._sortDir.toLowerCase()
-            delete params._sortField
-            delete params._sortDir
-            params.order = `${field},${dir}`
+            if (params._sortField) {
+                const field = params._sortField
+                const dir = params._sortDir.toLowerCase()
+                delete params._sortField
+                delete params._sortDir
+                params.order = `${field},${dir}`
+            } else {
+                params.order = PKS[what]
+            }
+
         }
     })
 }])
