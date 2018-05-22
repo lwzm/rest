@@ -52,31 +52,11 @@ def main():
         })
 
     print("export default " + json.dumps(tables, indent=4))
-    return
-
-    tables = []
-
-    definitions = data["definitions"]
-    for tableName in definitions:
-        properties = definitions[tableName]["properties"]
-        fs = []
-        for columnName in properties:
-            attrs = properties[columnName]
-            desc = attrs.get("description", "")
-            fkInfo = fkRegExp.search(desc)
-            if fkInfo:
-                t, c = fkInfo.groups()
-                fkInfo = {
-                    "tableName": t,
-                    "columnName": c,
-                }
-
-    print("export default " + json.dumps(tables["paths"], indent=4))
 
 
 if __name__ == "__main__":
     """
     usage:
-        ./convert_swagger_postgrest.py >definitions.js
+        ./convert_swagger_phpcrudapi.py >definitions.js
     """
     main()
