@@ -9,9 +9,16 @@ import re
 import requests
 
 columnFormatMap = {
+    "int": "number",
+    "bigint": "number",
     "integer": "number",
+    "enum": "number",
+    "real": "float",
+    "float": "float",
+    "double": "float",
     "varchar": "string",
     "text": "text",
+    "longtext": "text",
     "boolean": "boolean",
     "datetime": "datetime",
     "timestamp": "datetime",
@@ -23,7 +30,9 @@ columnFormatMap = {
 def main():
     tables = []
 
-    data = requests.get("http://crud.tyio.net/").json()
+    url = "http://crud.z.tyio.net/api/"
+    url = "http://crud.tyio.net/api/"
+    data = requests.get(url).json()
     for k, v in data["paths"].items():
         if k.count("/") > 1:
             continue
