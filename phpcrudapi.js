@@ -290,7 +290,7 @@ function init(nga, admin) {
                         entity-name="${tableName}"
                         filter="{ ${columnName}: entry.values.id }"
                     ></ma-filtered-list-button>
-                `)
+                `)  // entry.values.id todo
             ,
         ]
         fkEntity.editionView().fields(fields)

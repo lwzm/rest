@@ -92,12 +92,14 @@ App.config(["RestangularProvider", (rest) => {
                     }
                 }
 
-                //headers['Range-Unit'] = what
-                const p = params._page
-                const u = params._perPage
-                headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
-                delete params._page
-                delete params._perPage
+                if (params._page) {
+                    const p = params._page
+                    const u = params._perPage
+                    delete params._page
+                    delete params._perPage
+                    headers['Range'] = `${(p - 1) * u}-${p * u - 1}`
+                }
+
                 if (params._sortField) {
                     const field = params._sortField
                     if (field == "id" && PKS[what] != "id") {
@@ -121,6 +123,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
         .debug(false)
 
     nga.configure(admin)
+    admin.dashboard(nga.dashboard())
 
     init(nga, admin)
 
@@ -320,7 +323,7 @@ function init(nga, admin) {
                         entity-name="${tableName}"
                         filter="{ ${columnName}: entry.values.id }"
                     ></ma-filtered-list-button>
-                `)
+                `)  // entry.values.id todo
             ,
         ]
         fkEntity.editionView().fields(fields)
