@@ -115,7 +115,8 @@ function init(nga, admin) {
     try {
         const resp = $.ajax({url: BasePath + "_meta", async: false})
         const meta = JSON.parse(resp.response)
-        for (const i of meta) {
+        const {columns, records} = meta._meta
+        for (const i of records.map((i) => zipObject(columns, i))) {
             metas[i.name] = i
         }
     } catch (e) {
@@ -147,7 +148,7 @@ function init(nga, admin) {
         const fields = []
 
         for (const {columnName, format, pkFlag, fkInfo} of fs) {
-            const meta = metas[`${tableName}.${columnName}`] || {}
+            const meta = metas[`${tableName}-${columnName}`] || {}
             let field
             
             const type = meta.type || format
@@ -170,7 +171,9 @@ function init(nga, admin) {
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
-                    meta.choices.map((i) => ({value: i, label: i}))
+                    meta.choices.map(
+                        (i) => typeof(i) == "string" ? ({value: i, label: i}) : i
+                    )
                 ).label(columnName)
             } else {
                 field = nga.field(columnName, type).label(columnName)
@@ -249,7 +252,7 @@ function init(nga, admin) {
     for (const {entity, tableName, fields, filters} of tables) {
         const fieldsForList = fields.filter(function (i) {
             const columnName = i.name()
-            const meta = metas[`${tableName}.${columnName}`]
+            const meta = metas[`${tableName}-${columnName}`]
             if (meta && meta.hide) {
                 return false
             }

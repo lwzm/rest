@@ -203,7 +203,9 @@ function init(nga, admin) {
                     .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
-                    meta.choices.map((i) => ({value: i, label: i}))
+                    meta.choices.map(
+                        (i) => typeof(i) == "string" ? ({value: i, label: i}) : i
+                    )
                 ).label(columnName)
             } else {
                 field = nga.field(columnName, type).label(columnName)
