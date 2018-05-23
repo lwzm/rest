@@ -172,7 +172,7 @@ function init(nga, admin) {
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
                     meta.choices.map(
-                        (i) => typeof(i) == "string" ? ({value: i, label: i}) : i
+                        (i) => typeof(i) == "string" ? {value: i, label: i} : i
                     )
                 ).label(columnName)
             } else {
