@@ -9,6 +9,9 @@ import re
 import requests
 
 columnFormatMap = {
+    "tinyint": "number",
+    "smallint": "number",
+    "mediumint": "number",
     "int": "number",
     "bigint": "number",
     "integer": "number",
@@ -17,6 +20,7 @@ columnFormatMap = {
     "float": "float",
     "double": "float",
     "varchar": "string",
+    "tinytext": "string",
     "text": "text",
     "longtext": "text",
     "boolean": "boolean",
