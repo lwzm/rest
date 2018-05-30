@@ -54,7 +54,7 @@ def main():
                 }
             fs.append({
                 "columnName": columnName,
-                "format": columnFormatMap[info["x-dbtype"].partition("(")[0]],
+                "format": columnFormatMap[info["x-dbtype"].partition("(")[0].lower()],
                 "pkFlag": info.get("x-primary-key"),
                 "fkInfo": fkInfo,
             })
