@@ -92,7 +92,7 @@ export default [
             },
             {
                 "columnName": "value",
-                "format": "number",
+                "format": "float",
                 "pkFlag": false,
                 "fkInfo": null
             },

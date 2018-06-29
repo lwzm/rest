@@ -47,8 +47,12 @@ const translations = {
 
 !function () {
     const other = {
-        "item": "物品",
-        "price": "单价",
+        item: "物品",
+        price: "单价",
+        comment: "备注",
+        ts: "创建时间",
+        unit: "单位",
+        value: "数值",
         /*
         'resume': '简历',
         "name": "名字",

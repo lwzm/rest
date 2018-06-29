@@ -46,7 +46,7 @@ create table api.item (
 create table api.price (
     id serial primary key,
     item integer references api.item (id) not null,
-    value integer not null,  -- cents
+    value real not null,
     unit varchar(8) not null,
     comment text,
     ts timestamp with time zone default current_timestamp
