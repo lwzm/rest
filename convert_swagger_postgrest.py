@@ -38,10 +38,14 @@ def main():
     tables = []
 
     definitions = data["definitions"]
+    representable = {"id", "name"}
     for tableName in definitions:
         properties = definitions[tableName]["properties"]
         fs = []
+        displayForFk = None
         for columnName in properties:
+            if columnName in representable:
+                displayForFk = columnName
             attrs = properties[columnName]
             desc = attrs.get("description", "")
             fkInfo = fkRegExp.search(desc)
@@ -60,6 +64,7 @@ def main():
 
         tables.append({
             "tableName": tableName,
+            "displayForFk": displayForFk,
             "fs": fs,
         })
 

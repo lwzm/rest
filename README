@@ -1,0 +1,2 @@
+./convert_swagger_postgrest.py >definitions.js
+yarn build

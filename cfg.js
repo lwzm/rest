@@ -40,10 +40,16 @@ const translations = {
     'STATE_FORBIDDEN_ERROR': 'A server 403 error occured: {{ message }}',
     'NOT_FOUND': 'Not Found',
     'NOT_FOUND_DETAILS': 'The page you are looking for cannot be found. Take a break before trying again.',
+
+    "id": "ID",
+    "name": "名称",
 }
 
 !function () {
     const other = {
+        "item": "物品",
+        "price": "单价",
+        /*
         'resume': '简历',
         "name": "名字",
         "mobile": "联系电话",
@@ -55,6 +61,7 @@ const translations = {
         "desc_job_exp": "工作经历",
         "source": "来源",
         "ctime": "创建时间",
+        */
     }
 
     const other2 = {

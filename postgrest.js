@@ -140,6 +140,7 @@ function init(nga, admin) {
         const entity = nga.entity(i.tableName)
             .updateMethod("patch")
             .label(i.tableName)
+        entity.displayForFk = i.displayForFk
         entities[i.tableName] = entity
         tables.push(Object.assign({entity}, i))
     }
@@ -196,11 +197,12 @@ function init(nga, admin) {
             } else if (fkInfo) {
                 const fkEntity = entities[fkInfo.tableName]
                 relations.push({fkEntity, entity, tableName, columnName})
+                const fkName = fkEntity.displayForFk || fkInfo.columnName
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkEntity)
-                    .targetField(nga.field(fkInfo.columnName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkInfo.columnName))
+                    .targetField(nga.field(fkName))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName))
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
                     meta.choices.map(
