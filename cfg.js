@@ -48,9 +48,9 @@ const translations = {
 !function () {
     const other = {
         item: "物品",
-        price: "单价",
+        price: "标价",
         comment: "备注",
-        ts: "创建时间",
+        ts: "-",
         unit: "单位",
         value: "数值",
         /*
