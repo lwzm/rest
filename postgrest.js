@@ -157,16 +157,10 @@ function init(nga, admin) {
     }
 
 
-    const remoteCompleteOptions = {
-        refreshDelay: 300,
-        searchQuery: function (search) {
-            return {
-                "id": search,
-            }
-        },
-    }
-
     function remoteCompleteOptionsFactory(key) {
+        if (key == "name") {
+            key = `${key}...like`
+        }
         return {
             refreshDelay: 300,
             searchQuery: (search) => ({
@@ -211,6 +205,9 @@ function init(nga, admin) {
                 ).label(columnName)
             } else {
                 field = nga.field(columnName, type).label(columnName)
+                if (type == "float") {
+                    field.format("0.00")
+                }
             }
 
             if (meta.readonly) {
