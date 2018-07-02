@@ -6,6 +6,8 @@
 --grant usage on schema api to web_anon;
 --grant all on schema api to your-user;
 
+\q
+
 drop table api._meta;
 create table api._meta (
     name varchar(32) primary key,
@@ -48,6 +50,7 @@ create table api.price (
     item integer references api.item (id) not null,
     value real not null,
     unit varchar(8) not null,
+    unique(item, unit),
     comment text,
     ts timestamp with time zone default current_timestamp
 );
