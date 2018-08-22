@@ -264,6 +264,14 @@ function init(nga, admin) {
                             .targetField(field.targetField())
                     )
                     break
+                case 'choice':
+                    filters.push(
+                        nga.field(name, "choice")
+                            .label(`${name} =`)
+                            .pinned(pinned)
+                            .choices(field.choices())
+                    )
+                    break
                 default:
                     filters.push(
                         nga.field(name, type)
