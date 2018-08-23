@@ -44,6 +44,7 @@ export default [
     {
         "tableName": "item",
         "displayForFk": "name",
+        "listActions": ["test", ],
         "fs": [
             {
                 "columnName": "id",

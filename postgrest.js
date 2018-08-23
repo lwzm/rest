@@ -11,6 +11,8 @@ const BasePath = "/api/"
 const PKS = {}
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
 
+import {directive} from "./directors"
+directive(App)
 
 function sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -140,9 +142,9 @@ function init(nga, admin) {
         const entity = nga.entity(i.tableName)
             .updateMethod("patch")
             .label(i.tableName)
-        entity.displayForFk = i.displayForFk
+        entity.customConfig = i
         entities[i.tableName] = entity
-        tables.push(Object.assign({entity}, i))
+        tables.push(entity)
     }
 
     // uri: /_meta
@@ -170,8 +172,8 @@ function init(nga, admin) {
     }
 
 
-    for (const table of tables) {
-        const {tableName, entity, fs} = table
+    for (const entity of tables) {
+        const {tableName, fs} = entity.customConfig
         const fields = []
 
         for (const {columnName, format, pkFlag, fkInfo} of fs) {
@@ -191,7 +193,7 @@ function init(nga, admin) {
             } else if (fkInfo) {
                 const fkEntity = entities[fkInfo.tableName]
                 relations.push({fkEntity, entity, tableName, columnName})
-                const fkName = fkEntity.displayForFk || fkInfo.columnName
+                const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkEntity)
@@ -284,11 +286,12 @@ function init(nga, admin) {
 
         filters.sort((a, b) => a.name() < b.name() ? 1 : -1)
 
-        Object.assign(table, {fields, filters})
+        Object.assign(entity.customConfig, {fields, filters})
     }
 
 
-    for (const {entity, tableName, fields, filters} of tables) {
+    for (const entity of tables) {
+        const {tableName, fields, filters} = entity.customConfig
         const fieldsForList = fields.filter(function (i) {
             const columnName = i.name()
             const meta = metas[`${tableName}.${columnName}`]
@@ -306,6 +309,10 @@ function init(nga, admin) {
             //.title(tableName)
             //.sortDir("ASC")
             //.infinitePagination(true)
+        const actions = entity.customConfig.listActions
+        if (actions) {
+            entity.listView().listActions(actions.map(tag => `<${tag} entry="entry"></${tag}>`))
+        }
 
         const fieldsForEdit = fields
             .filter((i) => !(i.name() == "id" && i.type() == "number"))
@@ -339,7 +346,7 @@ function init(nga, admin) {
     }
 
 
-    for (const {entity} of tables) {
+    for (const entity of tables) {
         admin.addEntity(entity)
     }
 
