@@ -142,6 +142,11 @@ function init(nga, admin) {
         const entity = nga.entity(i.tableName)
             .updateMethod("patch")
             .label(i.tableName)
+        const fsMap = {}
+        for (const field of i.fs) {
+            fsMap[field.columnName] = field
+        }
+        i.fsMap = fsMap
         entity.customConfig = i
         entities[i.tableName] = entity
         tables.push(entity)
@@ -159,18 +164,23 @@ function init(nga, admin) {
     }
 
 
-    function remoteCompleteOptionsFactory(key) {
-        if (key == "name") {
+    function remoteCompleteOptionsFactory(key, fuzzy=false) {
+        if (fuzzy) {
             key = `${key}...like`
         }
         return {
             refreshDelay: 300,
             searchQuery: (search) => ({
-                [key]: search,
+                [key]: fuzzy ? search + "*" : search,
             }),
         }
     }
 
+
+    const fuzzySearchFormats = {
+        "string": true,
+        "text": true,
+    }
 
     for (const entity of tables) {
         const {tableName, fs} = entity.customConfig
@@ -198,7 +208,7 @@ function init(nga, admin) {
                     .label(columnName)
                     .targetEntity(fkEntity)
                     .targetField(nga.field(fkName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName, fuzzySearchFormats[fkEntity.customConfig.fsMap[fkName].format]))
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
                     meta.choices.map(
