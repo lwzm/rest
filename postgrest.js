@@ -177,10 +177,11 @@ function init(nga, admin) {
     }
 
 
-    const fuzzySearchFormats = {
-        "string": true,
-        "text": true,
-    }
+    const fuzzySearchFormats = new Set([
+        "string",
+        "text",
+        "wysiwyg",
+    ])
 
     for (const entity of tables) {
         const {tableName, fs} = entity.customConfig
@@ -208,7 +209,7 @@ function init(nga, admin) {
                     .label(columnName)
                     .targetEntity(fkEntity)
                     .targetField(nga.field(fkName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName, fuzzySearchFormats[fkEntity.customConfig.fsMap[fkName].format]))
+                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].format)))
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
                     meta.choices.map(
