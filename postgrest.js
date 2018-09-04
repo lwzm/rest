@@ -76,6 +76,7 @@ App.config(["RestangularProvider", (rest) => {
                         delete element[k]
                     }
                 }
+                break
             case 'getList':
                 headers['Prefer'] = "count=exact"
 
@@ -112,6 +113,8 @@ App.config(["RestangularProvider", (rest) => {
                     delete params._sortField
                     delete params._sortDir
                 }
+                break
+            default:
                 break
         }
     })
