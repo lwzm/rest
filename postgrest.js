@@ -136,7 +136,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
 function init(nga, admin) {
     const tables = []
-    const relations = []
     const entities = {}
     const metas = {}
 
@@ -186,11 +185,12 @@ function init(nga, admin) {
         "wysiwyg",
     ])
 
-    for (const entity of tables) {
+
+    function generateFields(entity) {
         const {tableName, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo} of fs) {
+        for (const {columnName, format, pkFlag, fkInfo, template} of fs) {
             const meta = metas[`${tableName}.${columnName}`] || {}
             let field
             
@@ -206,7 +206,6 @@ function init(nga, admin) {
                 PKS[tableName] = columnName
             } else if (fkInfo) {
                 const fkEntity = entities[fkInfo.tableName]
-                relations.push({fkEntity, entity, tableName, columnName})
                 const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
                 field = nga.field(columnName, "reference")
                     .label(columnName)
@@ -221,9 +220,21 @@ function init(nga, admin) {
                 ).label(columnName)
             } else {
                 field = nga.field(columnName, type).label(columnName)
-                if (type == "float") {
+            }
+
+            switch (type) {
+                case 'float':
                     field.format("0.00")
-                }
+                    break;
+                case 'number':
+                    //field.format("0,0")
+                    break;
+                default:
+                    break;
+            }
+
+            if (template) {
+                field._todo_template = template
             }
 
             if (meta.readonly) {
@@ -236,7 +247,10 @@ function init(nga, admin) {
 
             fields.push(field)
         }
+        return fields
+    }
 
+    function generateFilters(fields) {
         const filters = []
         for (const field of fields) {
             const name = field.name()
@@ -297,16 +311,17 @@ function init(nga, admin) {
                     break
             }
         }
-
         filters.sort((a, b) => a.name() < b.name() ? 1 : -1)
-
-        Object.assign(entity.customConfig, {fields, filters})
+        return filters
     }
 
 
     for (const entity of tables) {
-        const {tableName, fields, filters} = entity.customConfig
-        const fieldsForList = fields.filter(function (i) {
+        const {tableName} = entity.customConfig
+        const fieldsForList = generateFields(entity).filter((i) => {
+            if (i._todo_template) {
+                i.template(i._todo_template)
+            }
             const columnName = i.name()
             const meta = metas[`${tableName}.${columnName}`]
             if (meta && meta.hide) {
@@ -317,8 +332,8 @@ function init(nga, admin) {
 
         entity.listView()
             .fields(fieldsForList)
-            .exportFields(fields)
-            .filters(filters)
+            .exportFields(fieldsForList)
+            .filters(generateFilters(fieldsForList))
             .perPage(10)
             //.title(tableName)
             //.sortDir("ASC")
@@ -328,7 +343,7 @@ function init(nga, admin) {
             entity.listView().listActions(actions.map(tag => `<${tag} entry="entry"></${tag}>`))
         }
 
-        const fieldsForEdit = fields
+        const fieldsForEdit = generateFields(entity)
             .filter((i) => !(i.name() == "id" && i.type() == "number"))
         const fieldsForCreate = fieldsForEdit
             .filter((i) => i.editable())
@@ -337,26 +352,41 @@ function init(nga, admin) {
     }
 
 
-    for (const {fkEntity, entity, tableName, columnName} of relations) {
-        const fields = [
-            nga.field(tableName, "referenced_list")
-                .targetEntity(entity)
-                .targetReferenceField(columnName)
-                .targetFields(entity.listView().fields())
-                .label(tableName)
-                .perPage(5)
-            ,
-            nga.field('commands button', 'template')
-                .label('')
-                .template(`
-                    <ma-filtered-list-button
-                        entity-name="${tableName}"
-                        filter="{ ${columnName}: entry.values.id }"
-                    ></ma-filtered-list-button>
-                `)  // entry.values.id todo
-            ,
-        ]
-        fkEntity.editionView().fields(fields)
+    const extraReferencedList = true
+    if (extraReferencedList) {
+        const relations = []
+        for (const entity of tables) {
+            const {tableName, fs} = entity.customConfig
+            for (const {columnName, fkInfo} of fs) {
+                if (fkInfo) {
+                    const fkEntity = entities[fkInfo.tableName]
+                    const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
+                    relations.push({fkEntity, entity, tableName, columnName})
+                }
+            }
+        }
+
+        for (const {fkEntity, entity, tableName, columnName} of relations) {
+            const fields = [
+                nga.field(tableName, "referenced_list")
+                    .targetEntity(entity)
+                    .targetReferenceField(columnName)
+                    .targetFields(entity.listView().fields())
+                    .label(tableName)
+                    .perPage(5)
+                ,
+                nga.field('commands button', 'template')
+                    .label('')
+                    .template(`
+                        <ma-filtered-list-button
+                            entity-name="${tableName}"
+                            filter="{ ${columnName}: entry.values.id }"
+                        ></ma-filtered-list-button>
+                    `)  // entry.values.id todo
+                ,
+            ]
+            fkEntity.editionView().fields(fields)
+        }
     }
 
 
