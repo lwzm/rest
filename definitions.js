@@ -44,7 +44,6 @@ export default [
     {
         "tableName": "item",
         "displayForFk": "name",
-        "listActions": ["test", ],
         "fs": [
             {
                 "columnName": "id",
@@ -62,8 +61,8 @@ export default [
                 "columnName": "comment",
                 "format": "text",
                 "pkFlag": false,
-                "template": `<img width=20 height=20 src="https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg" >{{ value }}`,
-                "fkInfo": null
+                "fkInfo": null,
+                "template": "<img width=20 height=20 src=\"https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg\" >{{ value }}"
             },
             {
                 "columnName": "ts",
@@ -71,6 +70,9 @@ export default [
                 "pkFlag": false,
                 "fkInfo": null
             }
+        ],
+        "listActions": [
+            "test"
         ]
     },
     {

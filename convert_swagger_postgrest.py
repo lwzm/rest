@@ -39,7 +39,12 @@ def main():
 
     definitions = data["definitions"]
     representable = {"id", "name"}
+
+    with open("postgrest-patch.json") as f:
+        patch = json.load(f)
+
     for tableName in definitions:
+        tablePatch = patch.get(tableName, {})
         properties = definitions[tableName]["properties"]
         fs = []
         displayForFk = None
@@ -55,18 +60,22 @@ def main():
                     "tableName": t,
                     "columnName": c,
                 }
-            fs.append({
+            o = {
                 "columnName": columnName,
                 "format": columnFormatMap.get(attrs["format"], "string"),
                 "pkFlag": ".<pk" in desc,
                 "fkInfo": fkInfo,
-            })
+            }
+            o.update(tablePatch.pop(columnName, {}))
+            fs.append(o)
 
-        tables.append({
+        t = {
             "tableName": tableName,
             "displayForFk": displayForFk,
             "fs": fs,
-        })
+        }
+        t.update(tablePatch)
+        tables.append(t)
 
     print("export default " + json.dumps(tables, indent=4))
 
