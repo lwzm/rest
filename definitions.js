@@ -62,6 +62,7 @@ export default [
                 "columnName": "comment",
                 "format": "text",
                 "pkFlag": false,
+                "template": `<img width=20 height=20 src="https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg" >{{ value }}`,
                 "fkInfo": null
             },
             {
