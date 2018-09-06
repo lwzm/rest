@@ -95,11 +95,9 @@ App.config(["RestangularProvider", (rest) => {
                     delete params._filters
                 }
 
-                const id = what + ":" + (filters ?
+                CC.id = what + ":" + (filters ?
                     Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : "")
-
-                CC.id = id
-                if (!CC[id]) {
+                if (!CC[CC.id]) {
                     headers['Prefer'] = "count=exact"
                 }
 
