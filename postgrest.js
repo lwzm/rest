@@ -9,6 +9,7 @@ import definitions from "./definitions"
 
 const BasePath = "/api/"
 const PKS = {}
+const CC = {}  // CountCache
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
 
 import {directive} from "./directors"
@@ -48,7 +49,12 @@ App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
         switch (operation) {
             case 'getList':
-                response.totalCount = response.headers('Content-Range').split('/')[1]
+                const n = +response.headers('Content-Range').split('/')[1]
+                if (n) {
+                    response.totalCount = CC[CC.id] = n
+                } else {
+                    response.totalCount = CC[CC.id]
+                }
                 break
         }
         return data
@@ -78,21 +84,32 @@ App.config(["RestangularProvider", (rest) => {
                 }
                 break
             case 'getList':
-                headers['Prefer'] = "count=exact"
 
-                const filters = params._filters
-                delete params._filters
-
-                for (const key in filters) {
-                    let v = filters[key]
-                    if (v != null) {
-                        let [k, operator] = key.split("...")
-                        operator = operator || "eq"
-                        if (v instanceof Date) {
-                            v = v.toISOString()
+                const filters = {}
+                if (params._filters) {
+                    for (const [k, v] of Object.entries(params._filters)) {
+                        if (v != null) {
+                            filters[k] = v
                         }
-                        params[k] = `${operator}.${v}`
                     }
+                    delete params._filters
+                }
+
+                const id = what + ":" + (filters ?
+                    Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : "")
+
+                CC.id = id
+                if (!CC[id]) {
+                    headers['Prefer'] = "count=exact"
+                }
+
+                for (let [k, v] of Object.entries(filters)) {
+                    let [k2, operator] = k.split("...")
+                    operator = operator || "eq"
+                    if (v instanceof Date) {
+                        v = v.toISOString()
+                    }
+                    params[k2] = `${operator}.${v}`
                 }
 
                 if (params._page) {
