@@ -131,8 +131,9 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     admin.dashboard(nga.dashboard())
 
     init(nga, admin)
-
+    window.admin = admin
 }])
+
 
 function init(nga, admin) {
     const tables = []
@@ -394,7 +395,6 @@ function init(nga, admin) {
         admin.addEntity(entity)
     }
 
-    window.admin = admin
 }
 
 
