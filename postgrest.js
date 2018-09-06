@@ -398,6 +398,14 @@ function init(nga, admin) {
 }
 
 
+/*
+ * .babelrc should has:
+    "plugins": [
+        "transform-runtime",
+        "transform-class-properties",
+    ],
+
+
 !async function() {
     await sleep(1000)
     //let resp = await fetch("http://ip.tyio.net")
@@ -408,3 +416,4 @@ function init(nga, admin) {
 class T {
     a = 1
 }
+*/
