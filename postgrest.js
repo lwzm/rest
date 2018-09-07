@@ -47,14 +47,21 @@ App.config(["$httpProvider", (http) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
+        const cache = CC[what]
         switch (operation) {
             case 'getList':
                 const n = +response.headers('Content-Range').split('/')[1]
                 if (n) {
-                    response.totalCount = CC[CC.id] = n
+                    response.totalCount = cache[cache._] = n
                 } else {
-                    response.totalCount = CC[CC.id]
+                    response.totalCount = cache[cache._]
                 }
+                break
+            case 'post':
+                cache[cache._]++
+                break
+            case 'remove':
+                cache[cache._]--
                 break
         }
         return data
@@ -64,7 +71,6 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
-
         switch (operation) {
             case 'get':
             case 'patch':
@@ -84,7 +90,6 @@ App.config(["RestangularProvider", (rest) => {
                 }
                 break
             case 'getList':
-
                 const filters = {}
                 if (params._filters) {
                     for (const [k, v] of Object.entries(params._filters)) {
@@ -95,9 +100,12 @@ App.config(["RestangularProvider", (rest) => {
                     delete params._filters
                 }
 
-                CC.id = what + ":" + (filters ?
+                const cache = CC[what] || {}
+                CC[what] = cache
+
+                cache._ = what + ":" + (filters ?
                     Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : "")
-                if (!CC[CC.id]) {
+                if (!cache[cache._]) {
                     headers['Prefer'] = "count=exact"
                 }
 
@@ -128,8 +136,6 @@ App.config(["RestangularProvider", (rest) => {
                     delete params._sortField
                     delete params._sortDir
                 }
-                break
-            default:
                 break
         }
     })
@@ -244,8 +250,6 @@ function init(nga, admin) {
                     break;
                 case 'number':
                     //field.format("0,0")
-                    break;
-                default:
                     break;
             }
 
