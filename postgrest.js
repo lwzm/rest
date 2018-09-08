@@ -103,8 +103,8 @@ App.config(["RestangularProvider", (rest) => {
                 const cache = CC[what] || {}
                 CC[what] = cache
 
-                cache._ = what + ":" + (filters ?
-                    Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : "")
+                cache._ = filters ?
+                    Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : ""
                 if (!cache[cache._]) {
                     headers['Prefer'] = "count=exact"
                 }
