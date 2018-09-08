@@ -6,18 +6,13 @@ import 'babel-polyfill'
 
 import cfg from "./cfg"
 import definitions from "./definitions"
+import {directive} from "./directors"
 
 const BasePath = "/api/"
 const PKS = {}
 const CC = {}  // CountCache
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
-
-import {directive} from "./directors"
 directive(App)
-
-function sleep (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
 
 // See:
 // https://ng-admin-book.marmelab.com/
@@ -58,10 +53,14 @@ App.config(["RestangularProvider", (rest) => {
                 }
                 break
             case 'post':
-                cache[cache._]++
+                for (const k in cache) {
+                    cache[k]++
+                }
                 break
             case 'remove':
-                cache[cache._]--
+                for (const k in cache) {
+                    cache[k]--
+                }
                 break
         }
         return data
@@ -424,6 +423,10 @@ function init(nga, admin) {
         "transform-class-properties",
     ],
 
+
+function sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 !async function() {
     await sleep(1000)
