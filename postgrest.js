@@ -228,11 +228,13 @@ function init(nga, admin) {
             } else if (fkInfo) {
                 const fkEntity = entities[fkInfo.tableName]
                 const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
+                const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].format))
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkEntity)
                     .targetField(nga.field(fkName))
-                    .remoteComplete(true, remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].format)))
+                    .remoteComplete(true, rco)
+                field.___rco = rco  // store this
             } else if (meta.choices) {
                 field = nga.field(columnName, "choice").choices(
                     meta.choices.map(
@@ -311,6 +313,7 @@ function init(nga, admin) {
                             .pinned(pinned)
                             .targetEntity(field.targetEntity())
                             .targetField(field.targetField())
+                            .remoteComplete(true, field.___rco)
                     )
                     break
                 case 'choice':
