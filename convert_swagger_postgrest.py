@@ -38,8 +38,6 @@ def main():
     tables = []
 
     definitions = data["definitions"]
-    representable = {"id", "name"}
-
     with open("postgrest-patch.json") as f:
         patch = json.load(f)
 
@@ -49,8 +47,6 @@ def main():
         fs = []
         displayForFk = None
         for columnName in properties:
-            if columnName in representable:
-                displayForFk = columnName
             attrs = properties[columnName]
             desc = attrs.get("description", "")
             fkInfo = fkRegExp.search(desc)
@@ -60,10 +56,13 @@ def main():
                     "tableName": t,
                     "columnName": c,
                 }
+            pkFlag = ".<pk" in desc
+            if pkFlag:
+                displayForFk = columnName
             o = {
                 "columnName": columnName,
                 "format": columnFormatMap.get(attrs["format"], "string"),
-                "pkFlag": ".<pk" in desc,
+                "pkFlag": pkFlag,
                 "fkInfo": fkInfo,
             }
             o.update(tablePatch.pop(columnName, {}))
