@@ -20,9 +20,9 @@ directive(App)
 
 // https://ng-admin-book.marmelab.com/doc/Translation.html
 App.config(['$translateProvider', function ($translateProvider) {
-  $translateProvider.translations('zh', cfg.translations);
-  $translateProvider.preferredLanguage('zh');
-}]);
+  $translateProvider.translations('zh', cfg.translations)
+  $translateProvider.preferredLanguage('zh')
+}])
 
 
 App.config(["$httpProvider", (http) => {
@@ -102,8 +102,10 @@ App.config(["RestangularProvider", (rest) => {
                 const cache = CC[what] || {}
                 CC[what] = cache
 
-                cache._ = filters ?
-                    Object.entries(filters).map(([k, v]) => `${k}=${v}`).sort().join(",") : ""
+                cache._ = Object.entries(filters)
+                    .map(([k, v]) => `${k}=${v}`)
+                    .sort()
+                    .join(",")
                 if (!cache[cache._]) {
                     headers['Prefer'] = "count=exact"
                 }
@@ -248,10 +250,10 @@ function init(nga, admin) {
             switch (type) {
                 case 'float':
                     field.format("0.00")
-                    break;
+                    break
                 case 'number':
-                    //field.format("0,0")
-                    break;
+                    field.format && field.format("0")
+                    break
             }
 
             if (template) {
