@@ -46,10 +46,10 @@ App.config(["RestangularProvider", (rest) => {
         switch (operation) {
             case 'getList':
                 const n = +response.headers('Content-Range').split('/')[1]
-                if (n) {
-                    response.totalCount = cache[cache._] = n
+                if (isNaN(n)) {
+                    response.totalCount = cache[cache._] || 999
                 } else {
-                    response.totalCount = cache[cache._]
+                    response.totalCount = cache[cache._] = n
                 }
                 break
             case 'post':
@@ -109,6 +109,7 @@ App.config(["RestangularProvider", (rest) => {
                 if (!cache[cache._]) {
                     headers['Prefer'] = "count=exact"
                 }
+                    headers['Prefer'] = "count=exact"
 
                 for (let [k, v] of Object.entries(filters)) {
                     let [k2, operator] = k.split("...")
