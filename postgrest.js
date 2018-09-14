@@ -109,7 +109,6 @@ App.config(["RestangularProvider", (rest) => {
                 if (!cache[cache._]) {
                     headers['Prefer'] = "count=exact"
                 }
-                    headers['Prefer'] = "count=exact"
 
                 for (let [k, v] of Object.entries(filters)) {
                     let [k2, operator] = k.split("...")
