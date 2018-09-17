@@ -14,6 +14,8 @@ const CC = {}  // CountCache
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
 directive(App)
 
+let AuthUserName
+
 // See:
 // https://ng-admin-book.marmelab.com/
 
@@ -42,6 +44,12 @@ App.config(["$httpProvider", (http) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
+        if (!AuthUserName) {
+            AuthUserName = response.headers()["auth-user-name"]
+            setTimeout(function () {
+                $('.navbar-header .navbar-brand').text(AuthUserName)
+            }, 1000)
+        }
         const cache = CC[what]
         switch (operation) {
             case 'getList':
