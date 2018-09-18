@@ -4,6 +4,7 @@ import json
 import re
 
 import requests
+import yaml
 
 
 columnFormatMap = {
@@ -38,8 +39,8 @@ def main():
     tables = []
 
     definitions = data["definitions"]
-    with open("postgrest-patch.json") as f:
-        patch = json.load(f)
+    with open("postgrest-patch.yaml") as f:
+        patch = yaml.load(f)
 
     for tableName in definitions:
         tablePatch = patch.get(tableName, {})
