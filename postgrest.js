@@ -221,7 +221,7 @@ function init(nga, admin) {
         const {tableName, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo, template} of fs) {
+        for (const {columnName, format, pkFlag, fkInfo, template, hide} of fs) {
             const meta = metas[`${tableName}.${columnName}`] || {}
             let field
             
@@ -264,9 +264,8 @@ function init(nga, admin) {
                     break
             }
 
-            if (template) {
-                field._todo_template = template
-            }
+            field._todo_template = template
+            field._todo_hide = hide
 
             if (meta.readonly) {
                 field.editable(false)
@@ -356,7 +355,7 @@ function init(nga, admin) {
             }
             const columnName = i.name()
             const meta = metas[`${tableName}.${columnName}`]
-            if (meta && meta.hide) {
+            if (i._todo_hide || meta && meta.hide) {
                 return false
             }
             return true

@@ -68,7 +68,8 @@ export default [
                 "columnName": "ts",
                 "format": "datetime",
                 "pkFlag": false,
-                "fkInfo": null
+                "fkInfo": null,
+                "hide": true
             }
         ],
         "listActions": [
