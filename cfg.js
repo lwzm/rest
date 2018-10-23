@@ -66,6 +66,9 @@ const translations = {
         "source": "来源",
         "ctime": "创建时间",
         */
+        ksid: "快手ID",
+        fans: "粉丝",
+        city: "城市",
     }
 
     const other2 = {
