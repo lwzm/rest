@@ -46,7 +46,7 @@ def main():
         tablePatch = patch.get(tableName, {})
         properties = definitions[tableName].get("properties", [])
         fs = []
-        displayForFk = None
+        pk = None
         for columnName in properties:
             attrs = properties[columnName]
             desc = attrs.get("description", "")
@@ -57,13 +57,11 @@ def main():
                     "tableName": t,
                     "columnName": c,
                 }
-            pkFlag = ".<pk" in desc
-            if pkFlag:
-                displayForFk = columnName
+            if ".<pk" in desc:
+                pk = columnName
             o = {
                 "columnName": columnName,
                 "type": columnFormatMap.get(attrs["format"], "string"),
-                "pkFlag": pkFlag,
                 "fkInfo": fkInfo,
             }
             o.update(tablePatch.pop(columnName, {}))
@@ -71,7 +69,8 @@ def main():
 
         t = {
             "tableName": tableName,
-            "displayForFk": displayForFk,
+            "primaryKey": pk,
+            "displayForFk": pk,
             "fs": fs,
         }
         t.update(tablePatch)

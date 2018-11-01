@@ -1,30 +1,27 @@
 export default [
     {
         "tableName": "item",
+        "primaryKey": "id",
         "displayForFk": "name",
         "fs": [
             {
                 "columnName": "id",
                 "type": "number",
-                "pkFlag": true,
                 "fkInfo": null
             },
             {
                 "columnName": "name",
                 "type": "string",
-                "pkFlag": false,
                 "fkInfo": null
             },
             {
                 "columnName": "comment",
                 "type": "wysiwyg",
-                "pkFlag": false,
                 "fkInfo": null
             },
             {
                 "columnName": "ts",
                 "type": "datetime",
-                "pkFlag": false,
                 "fkInfo": null,
                 "hide": true
             }
@@ -35,18 +32,17 @@ export default [
     },
     {
         "tableName": "price",
+        "primaryKey": "id",
         "displayForFk": "id",
         "fs": [
             {
                 "columnName": "id",
                 "type": "number",
-                "pkFlag": true,
                 "fkInfo": null
             },
             {
                 "columnName": "item",
                 "type": "number",
-                "pkFlag": false,
                 "fkInfo": {
                     "tableName": "item",
                     "columnName": "id"
@@ -55,13 +51,11 @@ export default [
             {
                 "columnName": "value",
                 "type": "float",
-                "pkFlag": false,
                 "fkInfo": null
             },
             {
                 "columnName": "unit",
                 "type": "string",
-                "pkFlag": false,
                 "fkInfo": null,
                 "choices": [
                     "吨",
@@ -78,14 +72,12 @@ export default [
             {
                 "columnName": "comment",
                 "type": "text",
-                "pkFlag": false,
                 "fkInfo": null,
                 "readonly": true
             },
             {
                 "columnName": "ts",
                 "type": "datetime",
-                "pkFlag": false,
                 "fkInfo": null
             }
         ]

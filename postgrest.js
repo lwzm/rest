@@ -205,13 +205,13 @@ function init(nga, admin) {
 
 
     function generateFields(entity) {
-        const {tableName, fs} = entity.customConfig
+        const {tableName, primaryKey, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, type, pkFlag, fkInfo, template, hide, choices, readonly, pinned} of fs) {
+        for (const {columnName, type, fkInfo, template, hide, choices, readonly, pinned} of fs) {
             let field
             
-            if (pkFlag) {
+            if (columnName == primaryKey) {
                 field = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
