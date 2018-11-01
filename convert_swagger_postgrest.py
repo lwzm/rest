@@ -46,38 +46,37 @@ def main():
         tablePatch = patch.get(tableName, {})
         properties = definitions[tableName].get("properties", [])
         fs = []
-        displayForFk = None
+        pk = None
         for columnName in properties:
             attrs = properties[columnName]
             desc = attrs.get("description", "")
-            fkInfo = fkRegExp.search(desc)
-            if fkInfo:
-                t, c = fkInfo.groups()
-                fkInfo = {
+            foreignKey = fkRegExp.search(desc)
+            if foreignKey:
+                t, c = foreignKey.groups()
+                foreignKey = {
                     "tableName": t,
                     "columnName": c,
                 }
-            pkFlag = ".<pk" in desc
-            if pkFlag:
-                displayForFk = columnName
+            if ".<pk" in desc:
+                pk = columnName
             o = {
                 "columnName": columnName,
-                "format": columnFormatMap.get(attrs["format"], "string"),
-                "pkFlag": pkFlag,
-                "fkInfo": fkInfo,
+                "type": columnFormatMap.get(attrs["format"], "string"),
+                "foreignKey": foreignKey,
             }
             o.update(tablePatch.pop(columnName, {}))
             fs.append(o)
 
         t = {
             "tableName": tableName,
-            "displayForFk": displayForFk,
+            "primaryKey": pk,
+            "displayForFk": pk,
             "fs": fs,
         }
         t.update(tablePatch)
         tables.append(t)
 
-    print("export default " + json.dumps(tables, indent=4))
+    print("export default " + json.dumps(tables, indent=4, ensure_ascii=False))
 
 
 if __name__ == "__main__":

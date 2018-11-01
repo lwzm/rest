@@ -168,7 +168,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 function init(nga, admin) {
     const tables = []
     const entities = {}
-    const metas = {}
 
     // uri: /
     for (const i of definitions) {
@@ -184,18 +183,6 @@ function init(nga, admin) {
         entities[i.tableName] = entity
         tables.push(entity)
     }
-
-    // uri: /_meta
-    try {
-        const resp = $.ajax({url: BasePath + "_meta", async: false})
-        const meta = JSON.parse(resp.response)
-        for (const i of meta) {
-            metas[i.name] = i
-        }
-    } catch (e) {
-        console.error(e)
-    }
-
 
     function remoteCompleteOptionsFactory(key, fuzzy=false) {
         if (fuzzy) {
@@ -218,16 +205,13 @@ function init(nga, admin) {
 
 
     function generateFields(entity) {
-        const {tableName, fs} = entity.customConfig
+        const {tableName, primaryKey, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo, template, hide} of fs) {
-            const meta = metas[`${tableName}.${columnName}`] || {}
+        for (const {columnName, type, foreignKey, template, hide, choices, readonly, pinned} of fs) {
             let field
             
-            const type = meta.type || format
-
-            if (pkFlag) {
+            if (columnName == primaryKey) {
                 field = nga.field(columnName, type)
                     .isDetailLink(true)
                     .pinned(true)
@@ -235,19 +219,19 @@ function init(nga, admin) {
                 entity.identifier(field)
                 entity.listView().sortField(columnName)
                 PKS[tableName] = columnName
-            } else if (fkInfo) {
-                const fkEntity = entities[fkInfo.tableName]
-                const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
-                const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].format))
+            } else if (foreignKey) {
+                const fkEntity = entities[foreignKey.tableName]
+                const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
+                const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].type))
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkEntity)
                     .targetField(nga.field(fkName))
                     .remoteComplete(true, rco)
                 field.___rco = rco  // store this
-            } else if (meta.choices) {
+            } else if (choices) {
                 field = nga.field(columnName, "choice").choices(
-                    meta.choices.map(
+                    choices.map(
                         (i) => typeof(i) == "string" ? {value: i, label: i} : i
                     )
                 ).label(columnName)
@@ -267,11 +251,11 @@ function init(nga, admin) {
             field._todo_template = template
             field._todo_hide = hide
 
-            if (meta.readonly) {
+            if (readonly) {
                 field.editable(false)
             }
 
-            if (meta.pinned) {
+            if (pinned) {
                 field.pinned(true)
             }
 
@@ -354,8 +338,7 @@ function init(nga, admin) {
                 i.template(i._todo_template)
             }
             const columnName = i.name()
-            const meta = metas[`${tableName}.${columnName}`]
-            if (i._todo_hide || meta && meta.hide) {
+            if (i._todo_hide) {
                 return false
             }
             return true
@@ -388,10 +371,10 @@ function init(nga, admin) {
         const relations = []
         for (const entity of tables) {
             const {tableName, fs} = entity.customConfig
-            for (const {columnName, fkInfo} of fs) {
-                if (fkInfo) {
-                    const fkEntity = entities[fkInfo.tableName]
-                    const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
+            for (const {columnName, foreignKey} of fs) {
+                if (foreignKey) {
+                    const fkEntity = entities[foreignKey.tableName]
+                    const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
                     relations.push({fkEntity, entity, tableName, columnName})
                 }
             }
