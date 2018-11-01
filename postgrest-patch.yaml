@@ -1,28 +1,47 @@
 item:
-  comment:
-    template: <img width=20 height=20 src="https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg" >{{ value }}
-  ts:
-    hide: true
-  displayForFk: name
-  listActions:
-  - test
+    comment:
+        template: <img width=20 height=20 src="https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg" >{{ value }}
+    ts:
+        hide: true
+    displayForFk: name
+    listActions:
+    - test
+
+
+price:
+    comment:
+        readonly: true
+
+    unit:
+        choices: [
+            吨,
+            公斤,
+            斤,
+            瓶,
+            箱,
+            盒,
+            条,
+            袋,
+            克,
+        ]
+
 
 user:
-  displayForFk: name
-  avatar:
-    template: <img width=48 height=48 src='{{ value }}' >
-  source:
-    template: <div>
-            <h6>{{ value.verifiedStatus.description }}</h6>
-            <img width=48 height=48 src='{{ value.profile }}' >
-        </div>
-  ksid:
-    template: <a href='{{ "https://live.kuaishou.com/profile/" + value }}' target=_blank>{{ value }}</a>
+    displayForFk: name
+    avatar:
+        template: <img width=48 height=48 src='{{ value }}' >
+    source:
+        template: <div>
+                        <h6>{{ value.verifiedStatus.description }}</h6>
+                        <img width=48 height=48 src='{{ value.profile }}' >
+                </div>
+    ksid:
+        template: <a href='{{ "https://live.kuaishou.com/profile/" + value }}' target=_blank>{{ value }}</a>
 
 video:
-  url:
-    template: <video width="150" height="200" controls>
-                  <source src='{{ value }}' type="video/mp4">
-              </video>
-  source:
-    hide: true
+    url:
+        template: <video width="150" height="200" controls>
+                                    <source src='{{ value }}' type="video/mp4">
+                            </video>
+    source:
+        hide: true

@@ -168,7 +168,6 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 function init(nga, admin) {
     const tables = []
     const entities = {}
-    const metas = {}
 
     // uri: /
     for (const i of definitions) {
@@ -184,18 +183,6 @@ function init(nga, admin) {
         entities[i.tableName] = entity
         tables.push(entity)
     }
-
-    // uri: /_meta
-    try {
-        const resp = $.ajax({url: BasePath + "_meta", async: false})
-        const meta = JSON.parse(resp.response)
-        for (const i of meta) {
-            metas[i.name] = i
-        }
-    } catch (e) {
-        console.error(e)
-    }
-
 
     function remoteCompleteOptionsFactory(key, fuzzy=false) {
         if (fuzzy) {
@@ -221,11 +208,10 @@ function init(nga, admin) {
         const {tableName, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo, template, hide} of fs) {
-            const meta = metas[`${tableName}.${columnName}`] || {}
+        for (const {columnName, format, pkFlag, fkInfo, template, hide, choices, readonly, pinned} of fs) {
             let field
             
-            const type = meta.type || format
+            const type = format
 
             if (pkFlag) {
                 field = nga.field(columnName, type)
@@ -245,9 +231,9 @@ function init(nga, admin) {
                     .targetField(nga.field(fkName))
                     .remoteComplete(true, rco)
                 field.___rco = rco  // store this
-            } else if (meta.choices) {
+            } else if (choices) {
                 field = nga.field(columnName, "choice").choices(
-                    meta.choices.map(
+                    choices.map(
                         (i) => typeof(i) == "string" ? {value: i, label: i} : i
                     )
                 ).label(columnName)
@@ -267,11 +253,11 @@ function init(nga, admin) {
             field._todo_template = template
             field._todo_hide = hide
 
-            if (meta.readonly) {
+            if (readonly) {
                 field.editable(false)
             }
 
-            if (meta.pinned) {
+            if (pinned) {
                 field.pinned(true)
             }
 
@@ -354,8 +340,7 @@ function init(nga, admin) {
                 i.template(i._todo_template)
             }
             const columnName = i.name()
-            const meta = metas[`${tableName}.${columnName}`]
-            if (i._todo_hide || meta && meta.hide) {
+            if (i._todo_hide) {
                 return false
             }
             return true

@@ -77,7 +77,7 @@ def main():
         t.update(tablePatch)
         tables.append(t)
 
-    print("export default " + json.dumps(tables, indent=4))
+    print("export default " + json.dumps(tables, indent=4, ensure_ascii=False))
 
 
 if __name__ == "__main__":

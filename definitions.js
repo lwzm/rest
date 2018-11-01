@@ -1,47 +1,5 @@
 export default [
     {
-        "tableName": "_meta",
-        "displayForFk": "name",
-        "fs": [
-            {
-                "columnName": "name",
-                "format": "string",
-                "pkFlag": true,
-                "fkInfo": null
-            },
-            {
-                "columnName": "type",
-                "format": "string",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "choices",
-                "format": "json",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "pinned",
-                "format": "boolean",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "readonly",
-                "format": "boolean",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "hide",
-                "format": "boolean",
-                "pkFlag": false,
-                "fkInfo": null
-            }
-        ]
-    },
-    {
         "tableName": "item",
         "displayForFk": "name",
         "fs": [
@@ -105,13 +63,25 @@ export default [
                 "columnName": "unit",
                 "format": "string",
                 "pkFlag": false,
-                "fkInfo": null
+                "fkInfo": null,
+                "choices": [
+                    "吨",
+                    "公斤",
+                    "斤",
+                    "瓶",
+                    "箱",
+                    "盒",
+                    "条",
+                    "袋",
+                    "克"
+                ]
             },
             {
                 "columnName": "comment",
                 "format": "text",
                 "pkFlag": false,
-                "fkInfo": null
+                "fkInfo": null,
+                "readonly": true
             },
             {
                 "columnName": "ts",
