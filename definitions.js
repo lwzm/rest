@@ -7,22 +7,22 @@ export default [
             {
                 "columnName": "id",
                 "type": "number",
-                "fkInfo": null
+                "foreignKey": null
             },
             {
                 "columnName": "name",
                 "type": "string",
-                "fkInfo": null
+                "foreignKey": null
             },
             {
                 "columnName": "comment",
                 "type": "wysiwyg",
-                "fkInfo": null
+                "foreignKey": null
             },
             {
                 "columnName": "ts",
                 "type": "datetime",
-                "fkInfo": null,
+                "foreignKey": null,
                 "hide": true
             }
         ],
@@ -38,12 +38,12 @@ export default [
             {
                 "columnName": "id",
                 "type": "number",
-                "fkInfo": null
+                "foreignKey": null
             },
             {
                 "columnName": "item",
                 "type": "number",
-                "fkInfo": {
+                "foreignKey": {
                     "tableName": "item",
                     "columnName": "id"
                 }
@@ -51,12 +51,12 @@ export default [
             {
                 "columnName": "value",
                 "type": "float",
-                "fkInfo": null
+                "foreignKey": null
             },
             {
                 "columnName": "unit",
                 "type": "string",
-                "fkInfo": null,
+                "foreignKey": null,
                 "choices": [
                     "吨",
                     "公斤",
@@ -72,13 +72,13 @@ export default [
             {
                 "columnName": "comment",
                 "type": "text",
-                "fkInfo": null,
+                "foreignKey": null,
                 "readonly": true
             },
             {
                 "columnName": "ts",
                 "type": "datetime",
-                "fkInfo": null
+                "foreignKey": null
             }
         ]
     }

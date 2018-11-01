@@ -208,7 +208,7 @@ function init(nga, admin) {
         const {tableName, primaryKey, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, type, fkInfo, template, hide, choices, readonly, pinned} of fs) {
+        for (const {columnName, type, foreignKey, template, hide, choices, readonly, pinned} of fs) {
             let field
             
             if (columnName == primaryKey) {
@@ -219,9 +219,9 @@ function init(nga, admin) {
                 entity.identifier(field)
                 entity.listView().sortField(columnName)
                 PKS[tableName] = columnName
-            } else if (fkInfo) {
-                const fkEntity = entities[fkInfo.tableName]
-                const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
+            } else if (foreignKey) {
+                const fkEntity = entities[foreignKey.tableName]
+                const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
                 const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].type))
                 field = nga.field(columnName, "reference")
                     .label(columnName)
@@ -371,10 +371,10 @@ function init(nga, admin) {
         const relations = []
         for (const entity of tables) {
             const {tableName, fs} = entity.customConfig
-            for (const {columnName, fkInfo} of fs) {
-                if (fkInfo) {
-                    const fkEntity = entities[fkInfo.tableName]
-                    const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
+            for (const {columnName, foreignKey} of fs) {
+                if (foreignKey) {
+                    const fkEntity = entities[foreignKey.tableName]
+                    const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
                     relations.push({fkEntity, entity, tableName, columnName})
                 }
             }

@@ -50,10 +50,10 @@ def main():
         for columnName in properties:
             attrs = properties[columnName]
             desc = attrs.get("description", "")
-            fkInfo = fkRegExp.search(desc)
-            if fkInfo:
-                t, c = fkInfo.groups()
-                fkInfo = {
+            foreignKey = fkRegExp.search(desc)
+            if foreignKey:
+                t, c = foreignKey.groups()
+                foreignKey = {
                     "tableName": t,
                     "columnName": c,
                 }
@@ -62,7 +62,7 @@ def main():
             o = {
                 "columnName": columnName,
                 "type": columnFormatMap.get(attrs["format"], "string"),
-                "fkInfo": fkInfo,
+                "foreignKey": foreignKey,
             }
             o.update(tablePatch.pop(columnName, {}))
             fs.append(o)
