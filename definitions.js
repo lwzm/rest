@@ -5,26 +5,25 @@ export default [
         "fs": [
             {
                 "columnName": "id",
-                "format": "number",
+                "type": "number",
                 "pkFlag": true,
                 "fkInfo": null
             },
             {
                 "columnName": "name",
-                "format": "string",
+                "type": "string",
                 "pkFlag": false,
                 "fkInfo": null
             },
             {
                 "columnName": "comment",
-                "format": "text",
+                "type": "wysiwyg",
                 "pkFlag": false,
-                "fkInfo": null,
-                "template": "<img width=20 height=20 src=\"https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg\" >{{ value }}"
+                "fkInfo": null
             },
             {
                 "columnName": "ts",
-                "format": "datetime",
+                "type": "datetime",
                 "pkFlag": false,
                 "fkInfo": null,
                 "hide": true
@@ -40,13 +39,13 @@ export default [
         "fs": [
             {
                 "columnName": "id",
-                "format": "number",
+                "type": "number",
                 "pkFlag": true,
                 "fkInfo": null
             },
             {
                 "columnName": "item",
-                "format": "number",
+                "type": "number",
                 "pkFlag": false,
                 "fkInfo": {
                     "tableName": "item",
@@ -55,13 +54,13 @@ export default [
             },
             {
                 "columnName": "value",
-                "format": "float",
+                "type": "float",
                 "pkFlag": false,
                 "fkInfo": null
             },
             {
                 "columnName": "unit",
-                "format": "string",
+                "type": "string",
                 "pkFlag": false,
                 "fkInfo": null,
                 "choices": [
@@ -78,14 +77,14 @@ export default [
             },
             {
                 "columnName": "comment",
-                "format": "text",
+                "type": "text",
                 "pkFlag": false,
                 "fkInfo": null,
                 "readonly": true
             },
             {
                 "columnName": "ts",
-                "format": "datetime",
+                "type": "datetime",
                 "pkFlag": false,
                 "fkInfo": null
             }

@@ -208,11 +208,9 @@ function init(nga, admin) {
         const {tableName, fs} = entity.customConfig
         const fields = []
 
-        for (const {columnName, format, pkFlag, fkInfo, template, hide, choices, readonly, pinned} of fs) {
+        for (const {columnName, type, pkFlag, fkInfo, template, hide, choices, readonly, pinned} of fs) {
             let field
             
-            const type = format
-
             if (pkFlag) {
                 field = nga.field(columnName, type)
                     .isDetailLink(true)
@@ -224,7 +222,7 @@ function init(nga, admin) {
             } else if (fkInfo) {
                 const fkEntity = entities[fkInfo.tableName]
                 const fkName = fkEntity.customConfig.displayForFk || fkInfo.columnName
-                const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].format))
+                const rco = remoteCompleteOptionsFactory(fkName, fuzzySearchFormats.has(fkEntity.customConfig.fsMap[fkName].type))
                 field = nga.field(columnName, "reference")
                     .label(columnName)
                     .targetEntity(fkEntity)

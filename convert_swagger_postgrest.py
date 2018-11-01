@@ -62,7 +62,7 @@ def main():
                 displayForFk = columnName
             o = {
                 "columnName": columnName,
-                "format": columnFormatMap.get(attrs["format"], "string"),
+                "type": columnFormatMap.get(attrs["format"], "string"),
                 "pkFlag": pkFlag,
                 "fkInfo": fkInfo,
             }
