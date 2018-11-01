@@ -42,7 +42,7 @@ export default [
         ]
     },
     {
-        "tableName": "user",
+        "tableName": "item",
         "displayForFk": "name",
         "fs": [
             {
@@ -52,110 +52,60 @@ export default [
                 "fkInfo": null
             },
             {
-                "columnName": "ksid",
-                "format": "string",
-                "pkFlag": false,
-                "fkInfo": null,
-                "template": "<a href='{{ \"https://live.kuaishou.com/profile/\" + value }}' target=_blank>{{ value }}</a>"
-            },
-            {
                 "columnName": "name",
                 "format": "string",
                 "pkFlag": false,
                 "fkInfo": null
             },
             {
-                "columnName": "city",
-                "format": "string",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "fans",
-                "format": "number",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "videos",
-                "format": "number",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "source",
-                "format": "json",
-                "pkFlag": false,
-                "fkInfo": null,
-                "template": "<div> <h6>{{ value.verifiedStatus.description }}</h6> <img width=48 height=48 src='{{ value.profile }}' > </div>"
-            },
-            {
                 "columnName": "comment",
                 "format": "text",
                 "pkFlag": false,
-                "fkInfo": null
+                "fkInfo": null,
+                "template": "<img width=20 height=20 src=\"https://code.angularjs.org/1.6.1/docs/img/angularjs-for-header-only.svg\" >{{ value }}"
             },
             {
                 "columnName": "ts",
                 "format": "datetime",
                 "pkFlag": false,
-                "fkInfo": null
+                "fkInfo": null,
+                "hide": true
             }
         ],
-        "avatar": {
-            "template": "<img width=48 height=48 src='{{ value }}' >"
-        }
+        "listActions": [
+            "test"
+        ]
     },
     {
-        "tableName": "video",
+        "tableName": "price",
         "displayForFk": "id",
         "fs": [
             {
                 "columnName": "id",
-                "format": "string",
+                "format": "number",
                 "pkFlag": true,
                 "fkInfo": null
             },
             {
-                "columnName": "user",
+                "columnName": "item",
                 "format": "number",
                 "pkFlag": false,
                 "fkInfo": {
-                    "tableName": "user",
+                    "tableName": "item",
                     "columnName": "id"
                 }
             },
             {
-                "columnName": "caption",
+                "columnName": "value",
+                "format": "float",
+                "pkFlag": false,
+                "fkInfo": null
+            },
+            {
+                "columnName": "unit",
                 "format": "string",
                 "pkFlag": false,
                 "fkInfo": null
-            },
-            {
-                "columnName": "views",
-                "format": "number",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "likes",
-                "format": "number",
-                "pkFlag": false,
-                "fkInfo": null
-            },
-            {
-                "columnName": "url",
-                "format": "text",
-                "pkFlag": false,
-                "fkInfo": null,
-                "template": "<video width=\"150\" height=\"200\" controls> <source src='{{ value }}' type=\"video/mp4\"> </video>"
-            },
-            {
-                "columnName": "source",
-                "format": "json",
-                "pkFlag": false,
-                "fkInfo": null,
-                "hide": true
             },
             {
                 "columnName": "comment",

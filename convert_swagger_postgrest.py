@@ -33,7 +33,7 @@ columnFormatMap = {
 
 
 def main():
-    data = requests.get("http://127.0.0.2:3000/").json()
+    data = requests.get("http://127.0.0.1:3000/").json()
     fkRegExp = re.compile(r"<fk table='([^']+)' column='([^']+)'/>")
 
     tables = []

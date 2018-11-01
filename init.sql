@@ -1,3 +1,28 @@
+drop table api.price;
+drop table api.item;
+
+create table api.item (
+    id serial primary key,
+    name varchar(32) unique not null,
+    comment text,
+    ts timestamp with time zone default current_timestamp
+);
+
+create table api.price (
+    id serial primary key,
+    item integer references api.item (id) not null,
+    value real not null,
+    unit varchar(8) not null,
+    unique(item, unit),
+    comment text,
+    ts timestamp with time zone default current_timestamp
+);
+\q
+
+
+
+
+
 drop table _meta;
 create table _meta (
     name varchar(32) primary key,
