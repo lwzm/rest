@@ -7,7 +7,7 @@ item:
         type: wysiwyg
     displayForFk: name
     listActions:
-    - test
+        - test
 
 
 price:
@@ -15,17 +15,16 @@ price:
         readonly: true
 
     unit:
-        choices: [
-            吨,
-            公斤,
-            斤,
-            瓶,
-            箱,
-            盒,
-            条,
-            袋,
-            克,
-        ]
+        choices:
+            - 吨
+            - 公斤
+            - 斤
+            - 瓶
+            - 箱
+            - 盒
+            - 条
+            - 袋
+            - 克
 
 
 user:
