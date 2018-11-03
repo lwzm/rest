@@ -61,9 +61,11 @@ def main():
                 pk = columnName
             o = {
                 "columnName": columnName,
-                "type": columnFormatMap.get(attrs["format"], "string"),
-                "foreignKey": foreignKey,
             }
+            if foreignKey:
+                o["foreignKey"] = foreignKey
+            else:
+                o["type"] = columnFormatMap.get(attrs["format"], "string")
             o.update(tablePatch.pop(columnName, {}))
             fs.append(o)
 
