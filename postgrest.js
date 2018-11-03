@@ -8,7 +8,6 @@ import cfg from "./cfg"
 import definitions from "./definitions"
 import {directive} from "./directors"
 
-const BasePath = "/api/"
 const PKS = {}
 const CC = {}  // CountCache
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
@@ -154,7 +153,7 @@ App.config(["RestangularProvider", (rest) => {
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
     const admin = nga.application('_')
-        .baseApiUrl(BasePath)
+        .baseApiUrl("/api/")
         .debug(false)
 
     nga.configure(admin)
@@ -365,42 +364,37 @@ function init(nga, admin) {
         entity.creationView().fields(fieldsForCreate)
     }
 
-
-    const extraReferencedList = true
-    if (extraReferencedList) {
-        const relations = []
-        for (const entity of tables) {
-            const {tableName, fs} = entity.customConfig
-            for (const {columnName, foreignKey} of fs) {
-                if (foreignKey) {
-                    const fkEntity = entities[foreignKey.tableName]
-                    const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
-                    relations.push({fkEntity, entity, tableName, columnName})
-                }
+    const relations = []
+    for (const entity of tables) {
+        const {tableName, fs} = entity.customConfig
+        for (const {columnName, foreignKey} of fs) {
+            if (foreignKey) {
+                const fkEntity = entities[foreignKey.tableName]
+                const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
+                relations.push({fkEntity, entity, tableName, columnName})
             }
         }
-
-        for (const {fkEntity, entity, tableName, columnName} of relations) {
-            const fields = [
-                nga.field(tableName, "referenced_list")
-                    .targetEntity(entity)
-                    .targetReferenceField(columnName)
-                    .targetFields(entity.listView().fields())
-                    .label(tableName)
-                    .perPage(5)
-                ,
-                nga.field('commands button', 'template')
-                    .label('')
-                    .template(`
-                        <ma-filtered-list-button
-                            entity-name="${tableName}"
-                            filter="{ ${columnName}: entry.values.id }"
-                        ></ma-filtered-list-button>
-                    `)  // entry.values.id todo
-                ,
-            ]
-            fkEntity.editionView().fields(fields)
-        }
+    }
+    for (const {fkEntity, entity, tableName, columnName} of relations) {
+        const fields = [
+            nga.field(tableName, "referenced_list")
+                .targetEntity(entity)
+                .targetReferenceField(columnName)
+                .targetFields(entity.listView().fields())
+                .label(tableName)
+                .perPage(5)
+            ,
+            nga.field('commands button', 'template')
+                .label('')
+                .template(`
+                    <ma-filtered-list-button
+                        entity-name="${tableName}"
+                        filter="{ ${columnName}: entry.values.id }"
+                    ></ma-filtered-list-button>
+                `)
+            ,
+        ]
+        fkEntity.editionView().fields(fields)  // extra
     }
 
 
