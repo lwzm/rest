@@ -72,7 +72,6 @@ def main():
         t = {
             "tableName": tableName,
             "primaryKey": pk,
-            "displayForFk": pk,
             "fs": fs,
         }
         t.update(tablePatch)

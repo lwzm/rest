@@ -370,7 +370,6 @@ function init(nga, admin) {
         for (const {columnName, foreignKey} of fs) {
             if (foreignKey) {
                 const fkEntity = entities[foreignKey.tableName]
-                const fkName = fkEntity.customConfig.displayForFk || foreignKey.columnName
                 relations.push({fkEntity, entity, tableName, columnName})
             }
         }
