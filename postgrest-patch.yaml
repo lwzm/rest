@@ -32,17 +32,22 @@ user:
     avatar:
         template: <img width=48 height=48 src='{{ value }}' >
     source:
-        template: <div>
-                        <h6>{{ value.verifiedStatus.description }}</h6>
-                        <img width=48 height=48 src='{{ value.profile }}' >
-                </div>
+        template: |
+            <div>
+                <h6>{{ value.verifiedStatus.description }}</h6>
+                <img width=48 height=48 src='{{ value.profile }}'>
+            </div>
     ksid:
-        template: <a href='{{ "https://live.kuaishou.com/profile/" + value }}' target=_blank>{{ value }}</a>
+        template: |
+            <a href='{{ "https://live.kuaishou.com/profile/" + value }}' target=_blank>
+                {{ value }}
+            </a>
 
 video:
     url:
-        template: <video width="150" height="200" controls>
-                                    <source src='{{ value }}' type="video/mp4">
-                            </video>
+        template: |
+            <video width="150" height="200" controls>
+                <source src='{{ value }}' type="video/mp4">
+            </video>
     source:
         hide: true
