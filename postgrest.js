@@ -116,7 +116,7 @@ App.config(["RestangularProvider", (rest) => {
                     let [k2, operator] = k.split("...")
                     operator = operator || "eq"
                     if (v instanceof Date) {
-                        v = v.toISOString().replace("T", " ").replace("Z", "")
+                        v = v.toJSON()
                     }
                     params[k2] = `${operator}.${v}`
                 }
@@ -148,7 +148,7 @@ App.config(["RestangularProvider", (rest) => {
                     delete element[k]
                 }
                 if (v instanceof Date) {
-                    element[k] = v.toISOString().replace("T", " ").replace("Z", "")
+                    element[k] = v.toJSON()
                 }
             }
         }
