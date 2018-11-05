@@ -89,11 +89,6 @@ App.config(["RestangularProvider", (rest) => {
                 break
             case 'post':
                 delete element.id
-                for (const [k, v] of Object.entries(element)) {
-                    if (v === null) {
-                        delete element[k]
-                    }
-                }
                 break
             case 'getList':
                 const filters = {}
@@ -121,7 +116,7 @@ App.config(["RestangularProvider", (rest) => {
                     let [k2, operator] = k.split("...")
                     operator = operator || "eq"
                     if (v instanceof Date) {
-                        v = v.toISOString()
+                        v = v.toISOString().replace("T", " ").replace("Z", "")
                     }
                     params[k2] = `${operator}.${v}`
                 }
@@ -146,6 +141,18 @@ App.config(["RestangularProvider", (rest) => {
                 }
                 break
         }
+
+        if (element) {
+            for (const [k, v] of Object.entries(element)) {
+                if (v === null) {
+                    delete element[k]
+                }
+                if (v instanceof Date) {
+                    element[k] = v.toISOString().replace("T", " ").replace("Z", "")
+                }
+            }
+        }
+
     })
 }])
 
