@@ -77,18 +77,24 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
+        const idKey = PKS[what]
+
+        switch (operation) {
+            case 'post':
+            case 'patch':
+                delete element[idKey]
+                break
+            
+        }
+
         switch (operation) {
             case 'get':
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idKey = PKS[what]
                 const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
-                break
-            case 'post':
-                delete element.id
                 break
             case 'getList':
                 const filters = {}
@@ -144,9 +150,9 @@ App.config(["RestangularProvider", (rest) => {
 
         if (element) {
             for (const [k, v] of Object.entries(element)) {
-                if (v === null) {
-                    delete element[k]
-                }
+                //if (v === null) {
+                    //delete element[k]
+                //}
                 if (v instanceof Date) {
                     element[k] = v.toJSON()
                 }
