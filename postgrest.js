@@ -6,7 +6,7 @@ import 'babel-polyfill'
 
 import cfg from "./cfg"
 import definitions from "./definitions"
-import {directive} from "./directors"
+import { directive } from "./directors"
 
 const PKS = {}
 const CC = {}  // CountCache
@@ -21,8 +21,8 @@ let AuthUserName
 
 // https://ng-admin-book.marmelab.com/doc/Translation.html
 App.config(['$translateProvider', function ($translateProvider) {
-  $translateProvider.translations('zh', cfg.translations)
-  $translateProvider.preferredLanguage('zh')
+    $translateProvider.translations('zh', cfg.translations)
+    $translateProvider.preferredLanguage('zh')
 }])
 
 
@@ -84,7 +84,7 @@ App.config(["RestangularProvider", (rest) => {
             case 'patch':
                 delete element[idKey]
                 break
-            
+
         }
 
         switch (operation) {
@@ -151,7 +151,7 @@ App.config(["RestangularProvider", (rest) => {
         if (element) {
             for (const [k, v] of Object.entries(element)) {
                 //if (v === null) {
-                    //delete element[k]
+                //delete element[k]
                 //}
                 if (v instanceof Date) {
                     element[k] = v.toJSON()
@@ -196,7 +196,7 @@ function init(nga, admin) {
         tables.push(entity)
     }
 
-    function remoteCompleteOptionsFactory(key, fuzzy=false) {
+    function remoteCompleteOptionsFactory(key, fuzzy = false) {
         if (fuzzy) {
             key = `${key}...like`
         }
@@ -217,12 +217,12 @@ function init(nga, admin) {
 
 
     function generateFields(entity) {
-        const {tableName, primaryKey, fs} = entity.customConfig
+        const { tableName, primaryKey, fs } = entity.customConfig
         const fields = []
 
-        for (const {columnName, type, foreignKey, template, hide, choices, readonly, pinned} of fs) {
+        for (const { columnName, type, foreignKey, template, hide, choices, readonly, pinned } of fs) {
             let field
-            
+
             if (columnName == primaryKey) {
                 field = nga.field(columnName, type)
                     .isDetailLink(true)
@@ -244,7 +244,7 @@ function init(nga, admin) {
             } else if (choices) {
                 field = nga.field(columnName, "choice").choices(
                     choices.map(
-                        (i) => typeof(i) == "string" ? {value: i, label: i} : i
+                        (i) => typeof i == "string" ? { value: i, label: i } : i
                     )
                 ).label(columnName)
             } else {
@@ -344,7 +344,7 @@ function init(nga, admin) {
 
 
     for (const entity of tables) {
-        const {tableName} = entity.customConfig
+        const { tableName } = entity.customConfig
         const fieldsForList = generateFields(entity).filter((i) => {
             if (i._todo_template) {
                 i.template(i._todo_template)
@@ -361,9 +361,9 @@ function init(nga, admin) {
             .exportFields(fieldsForList)
             .filters(generateFilters(fieldsForList))
             .perPage(10)
-            //.title(tableName)
-            //.sortDir("ASC")
-            //.infinitePagination(true)
+            // .title(tableName)
+            // .sortDir("ASC")
+            // .infinitePagination(true)
         const actions = entity.customConfig.listActions
         if (actions) {
             entity.listView().listActions(actions.map(tag => `<${tag} entry="entry"></${tag}>`))
@@ -379,15 +379,15 @@ function init(nga, admin) {
 
     const relations = []
     for (const entity of tables) {
-        const {tableName, fs} = entity.customConfig
-        for (const {columnName, foreignKey} of fs) {
+        const { tableName, fs } = entity.customConfig
+        for (const { columnName, foreignKey } of fs) {
             if (foreignKey) {
                 const fkEntity = entities[foreignKey.tableName]
-                relations.push({fkEntity, entity, tableName, columnName})
+                relations.push({ fkEntity, entity, tableName, columnName })
             }
         }
     }
-    for (const {fkEntity, entity, tableName, columnName} of relations) {
+    for (const { fkEntity, entity, tableName, columnName } of relations) {
         const fields = [
             nga.field(tableName, "referenced_list")
                 .targetEntity(entity)
