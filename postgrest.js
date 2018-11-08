@@ -150,11 +150,10 @@ App.config(["RestangularProvider", (rest) => {
 
         if (element) {
             for (const [k, v] of Object.entries(element)) {
-                //if (v === null) {
-                //delete element[k]
-                //}
                 if (v instanceof Date) {
                     element[k] = v.toJSON()
+                } else if (operation == "post" && v == null) {
+                    delete element[k]
                 }
             }
         }
