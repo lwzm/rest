@@ -69,6 +69,9 @@ App.config(["RestangularProvider", (rest) => {
                     cache[k]--
                 }
                 break
+            case 'patch':
+                setTimeout(() => window._patch_todos.clear(), 500)
+                break
         }
         return data
     })
@@ -81,10 +84,16 @@ App.config(["RestangularProvider", (rest) => {
 
         switch (operation) {
             case 'post':
-            case 'patch':
                 delete element[idKey]
                 break
-
+            case 'patch':
+                const todos = window._patch_todos
+                for (const key of Object.keys(element)) {
+                    if (!todos.has(key)) {
+                        delete element[key]
+                    }
+                }
+                break
         }
 
         switch (operation) {
@@ -173,6 +182,7 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
     init(nga, admin)
     window.admin = admin
+    window._patch_todos = new Set()
 }])
 
 
