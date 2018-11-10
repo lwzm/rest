@@ -212,7 +212,7 @@ function init(nga, admin) {
         return {
             refreshDelay: 300,
             searchQuery: (search) => ({
-                [key]: fuzzy ? search + "*" : search,
+                [key]: fuzzy ? search + "%" : search,
             }),
         }
     }
