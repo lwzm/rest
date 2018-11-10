@@ -1,0 +1,7 @@
+person:
+    displayForFk: name
+
+car:
+    model:
+        readonly: true
+
