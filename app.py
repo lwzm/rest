@@ -147,9 +147,13 @@ app = tornado.web.Application(handlers)
 
 
 if __name__ == '__main__':
-    app.listen(8000)
-    import tornado.ioloop
-    tornado.ioloop.IOLoop.current().start()
+    from tornado.options import define, parse_command_line, options
+    define("port", default=8000)
+    define("addr", default="")
+    parse_command_line()
+    app.listen(options.port, options.addr, xheaders=True)
+    from tornado.ioloop import IOLoop
+    IOLoop.current().start()
 else:
-    import tornado.wsgi
-    application = tornado.wsgi.WSGIAdapter(app)
+    from tornado.wsgi import WSGIAdapter
+    application = WSGIAdapter(app)
