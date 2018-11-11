@@ -26,6 +26,9 @@ assert pony.orm.dbapiprovider.str2datetime is str2datetime
 assert pony.orm.dbapiprovider.str2date is str2date
 # money patch end
 
+
+import yaml
+
 from pony.orm import (
     Database,
     PrimaryKey,
@@ -68,7 +71,10 @@ class Test(Entity):
     j = Optional(Json)
 
 
-db.bind(provider='sqlite', filename='test.db', create_db=True)
+
+with open("entities.yaml") as f:
+    options, *_ = yaml.load_all(f)
+db.bind(**options)
 db.generate_mapping(create_tables=True)
 
 
@@ -99,7 +105,6 @@ def export():
     tables = Entity.__subclasses__()
 
     with open("entities-patch.yaml") as f:
-        import yaml
         patch = yaml.load(f)
 
     # 1
