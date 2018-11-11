@@ -109,10 +109,10 @@ def export():
         pk = None
         fs = []
         for column in table._attrs_:
-            if not column.column:
+            columnName = column.column
+            if not columnName:
                 continue
             assert column.py_type, column
-            columnName = column.column
             if column.is_pk:
                 pk = columnName
                 pks[table] = {

@@ -5,3 +5,10 @@ car:
     model:
         readonly: true
 
+coin_num:
+    type:
+        choices:
+            - label: 看多
+              value: 1
+            - label: 看空
+              value: -1
