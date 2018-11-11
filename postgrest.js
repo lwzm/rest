@@ -353,7 +353,7 @@ function init(nga, admin) {
 
 
     for (const entity of tables) {
-        const { tableName } = entity.customConfig
+        const { tableName, perPage } = entity.customConfig
         const fieldsForList = generateFields(entity).filter((i) => {
             if (i._todo_template) {
                 i.template(i._todo_template)
@@ -369,7 +369,7 @@ function init(nga, admin) {
             .fields(fieldsForList)
             .exportFields(fieldsForList)
             .filters(generateFilters(fieldsForList))
-            .perPage(10)
+            .perPage(perPage || 10)
             // .title(tableName)
             // .sortDir("ASC")
             // .infinitePagination(true)

@@ -8,6 +8,7 @@ item:
     displayForFk: name
     listActions:
         - test
+    perPage: 30
 
 
 price:
