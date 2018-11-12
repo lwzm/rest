@@ -7,6 +7,10 @@ import urllib.parse
 import pendulum
 import tornado.web
 
+import sentry_sdk
+dsn = "https://6862cdc845fd4683b994a890d21aafeb@sentry.io/1320801"
+sentry_sdk.init(dsn=dsn)
+
 import entities
 
 
@@ -55,7 +59,12 @@ def magic_it(Entity):
 
     converts = {}
 
+    def noop(x):
+        return x
+
     for i in Entity._attrs_:
+        if not i.column:
+            continue
         t = i.py_type
         conv = json.loads
         if t is datetime.datetime:
@@ -63,7 +72,7 @@ def magic_it(Entity):
         elif t is datetime.date:
             conv = str2date
         elif t is str:
-            conv = lambda x: x
+            conv = noop
         converts[i.column] = conv
 
     #orm.sql_debug(1)
