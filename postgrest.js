@@ -402,7 +402,7 @@ function init(nga, admin) {
             nga.field(tableName, "referenced_list")
                 .targetEntity(entity)
                 .targetReferenceField(columnName)
-                .targetFields(entity.listView().fields())
+                .targetFields(entity.listView().fields().filter(i => i.name() != columnName))
                 .label(tableName)
                 .perPage(5)
             ,
