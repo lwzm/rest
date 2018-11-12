@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
 
 import json
+import datetime
 import urllib.parse
 
+import pendulum
 import tornado.web
 
 import entities
 
 
+def json_default(x):
+    if isinstance(x, datetime.datetime):
+        x = x.replace(tzinfo=pendulum.local_timezone())
+    elif isinstance(x, datetime.date):
+        x
+    return str(x)
+
+
 class BaseHandler(tornado.web.RequestHandler):
-    def write_json(self, obj, default=str):
+
+    def write_json(self, obj):
         self.set_header("Content-Type", "application/json; charset=UTF-8")
-        self.write(json.dumps(obj, default=default, ensure_ascii=False,
+        self.write(json.dumps(obj, default=json_default, ensure_ascii=False,
                               separators=(",", ":")))
 
     @property
@@ -39,7 +50,6 @@ args_not_used = {"order", "select", }
 
 
 def magic_it(Entity):
-    from datetime import datetime, date
     from pony import orm
     from pony.converting import str2datetime, str2date
 
@@ -48,9 +58,9 @@ def magic_it(Entity):
     for i in Entity._attrs_:
         t = i.py_type
         conv = json.loads
-        if t is datetime:
+        if t is datetime.datetime:
             conv = str2datetime
-        elif t is date:
+        elif t is datetime.date:
             conv = str2date
         elif t is str:
             conv = lambda x: x
@@ -148,7 +158,7 @@ app = tornado.web.Application(handlers)
 
 if __name__ == '__main__':
     from tornado.options import define, parse_command_line, options
-    define("port", default=8000)
+    define("port", default=18000)
     define("addr", default="")
     parse_command_line()
     app.listen(options.port, options.addr, xheaders=True)
