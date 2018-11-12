@@ -45,8 +45,9 @@ App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
         if (!AuthUserName) {
             AuthUserName = response.headers()["auth-user-name"]
-            setTimeout(function () {
-                $('.navbar-header .navbar-brand').text(AuthUserName)
+            setTimeout(() => {
+                const navbar = document.querySelector('.navbar-header .navbar-brand')
+                navbar.text = AuthUserName
             }, 1000)
         }
         const cache = CC[what]
