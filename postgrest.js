@@ -69,9 +69,9 @@ App.config(["RestangularProvider", (rest) => {
                     cache[k]--
                 }
                 break
-            case 'patch':
-                setTimeout(() => window._patch_todos.clear(), 500)
-                break
+        }
+        if (operation != "get") {
+            setTimeout(() => window._patch_todos.clear(), 1000)
         }
         return data
     })
