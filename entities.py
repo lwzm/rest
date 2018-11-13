@@ -15,16 +15,10 @@ def str2datetime(s):
     dt = pendulum.parse(s, tz=tz)
     return datetime.fromtimestamp(dt.timestamp(), tz=tz)
 
-def str2date(s):
-    dt = pendulum.parse(s)
-    return date.fromtimestamp(dt.timestamp())
-
 pony.converting.str2datetime = str2datetime
-pony.converting.str2date = str2date
 
 import pony.orm
 assert pony.orm.dbapiprovider.str2datetime is str2datetime
-assert pony.orm.dbapiprovider.str2date is str2date
 # money patch end
 
 
