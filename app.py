@@ -16,9 +16,8 @@ import entities
 
 def json_default(x):
     if isinstance(x, datetime.datetime):
-        x = x.replace(tzinfo=pendulum.local_timezone())
-    elif isinstance(x, datetime.date):
-        x
+        ts = x.replace(tzinfo=pendulum.local_timezone()).timestamp()
+        x = pendulum.from_timestamp(ts).astimezone()
     return str(x)
 
 
