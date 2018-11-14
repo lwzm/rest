@@ -85,7 +85,9 @@ App.config(["RestangularProvider", (rest) => {
 
         switch (operation) {
             case 'post':
-                delete element[idKey]
+                if (element[idKey] == null) {
+                    delete element[idKey]
+                }
                 break
             case 'patch':
                 const todos = window._patch_todos
@@ -102,7 +104,7 @@ App.config(["RestangularProvider", (rest) => {
             case 'patch':
             case 'remove':
                 headers["Accept"] = "application/vnd.pgrst.object+json"
-                const idValue = decodeURI(url.slice(url.lastIndexOf("/") + 1))
+                const idValue = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1))
                 params[idKey] = `eq.${idValue}`
                 params.___strip_id_todo = true
                 break
