@@ -129,8 +129,7 @@ App.config(["RestangularProvider", (rest) => {
                 }
 
                 for (let [k, v] of Object.entries(filters)) {
-                    let [k2, operator] = k.split("...")
-                    operator = operator || "eq"
+                    const [k2, operator = "eq"] = k.split("...")
                     if (v instanceof Date) {
                         v = v.toJSON()
                     }
