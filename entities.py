@@ -11,6 +11,10 @@ import pendulum
 import pony.converting
 
 def str2datetime(s):
+    """
+    parse yyyy-mm-dd HH:MM:SS or yyyy-mm-ddTHH:MM:SS[TZ]
+    and return datetime with timezone
+    """
     tz = pendulum.local_timezone()
     dt = pendulum.parse(s, tz=tz)
     return datetime.fromtimestamp(dt.timestamp(), tz=tz)

@@ -7,11 +7,13 @@ import urllib.parse
 import pendulum
 import tornado.web
 
-import sentry_sdk
-dsn = "https://6862cdc845fd4683b994a890d21aafeb@sentry.io/1320801"
-sentry_sdk.init(dsn=dsn)
-
 import entities
+
+
+def sentry():
+    import sentry_sdk
+    dsn = "https://6862cdc845fd4683b994a890d21aafeb@sentry.io/1320801"
+    sentry_sdk.init(dsn=dsn)
 
 
 def json_default(x):
@@ -165,6 +167,8 @@ app = tornado.web.Application(handlers)
 
 
 if __name__ == '__main__':
+    if not __debug__:
+        sentry()
     from tornado.options import define, parse_command_line, options
     define("port", default=18000)
     define("addr", default="")
@@ -173,5 +177,6 @@ if __name__ == '__main__':
     from tornado.ioloop import IOLoop
     IOLoop.current().start()
 else:
+    sentry()
     from tornado.wsgi import WSGIAdapter
     application = WSGIAdapter(app)
