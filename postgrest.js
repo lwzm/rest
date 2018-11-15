@@ -13,8 +13,6 @@ const CC = {}  // CountCache
 const App = angular.module('myApp', ['ng-admin', 'pascalprecht.translate'])
 directive(App)
 
-let AuthUserName
-
 // See:
 // https://ng-admin-book.marmelab.com/
 
@@ -43,13 +41,6 @@ App.config(["$httpProvider", (http) => {
 
 App.config(["RestangularProvider", (rest) => {
     rest.addResponseInterceptor((data, operation, what, url, response, deferred) => {
-        if (!AuthUserName) {
-            AuthUserName = response.headers()["auth-user-name"]
-            setTimeout(() => {
-                const navbar = document.querySelector('.navbar-header .navbar-brand')
-                navbar.text = AuthUserName
-            }, 1000)
-        }
         const cache = CC[what]
         switch (operation) {
             case 'getList':
@@ -175,16 +166,29 @@ App.config(["RestangularProvider", (rest) => {
 
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
-    const admin = nga.application('_')
-        .baseApiUrl("/api/")
-        .debug(false)
 
-    nga.configure(admin)
-    admin.dashboard(nga.dashboard())
+    const authUrl = 'https://github.com/login/oauth/authorize?client_id=7d1cb3569f4ff9cb6781'
+    const authorization = localStorage.getItem("authorization")
+    if (authorization) {
+        const admin = nga.application('_')
+            .baseApiUrl("/api/")
+            .debug(false)
 
-    init(nga, admin)
-    window.admin = admin
-    window._patch_todos = new Set()
+        nga.configure(admin)
+        admin.dashboard(nga.dashboard())
+
+        init(nga, admin)
+
+        window.admin = admin
+        window._patch_todos = new Set()
+        setTimeout(() => {
+            const navbar = document.querySelector('.navbar-header .navbar-brand')
+            navbar.href = authUrl
+        }, 30)
+    } else {
+        document.location = authUrl
+    }
+
 }])
 
 
@@ -419,7 +423,6 @@ function init(nga, admin) {
         ]
         fkEntity.editionView().fields(fields)  // extra
     }
-
 
     for (const entity of tables) {
         admin.addEntity(entity)
