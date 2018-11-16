@@ -3,8 +3,10 @@
 import json
 import os
 
+import jwt
 import requests
 import tornado.web
+
 
 client_id = os.environ["GITHUB_CLIENT_ID"]
 client_secret = os.environ["GITHUB_CLIENT_SECRET"]
@@ -12,6 +14,7 @@ ss = requests.Session()
 tpl_script = """
 <script>
     localStorage.setItem("authorization", JSON.stringify({authorization}))
+    localStorage.setItem("jwt", "{jwt}")
     document.location = "/"
 </script>
 """
@@ -43,7 +46,8 @@ class Api(Handler):
         rsp = ss.get("https://api.github.com/user", headers={
             "Authorization": f"token {access_token}",
         })
-        self.write(tpl_script.format(authorization=rsp.text))
+        token = jwt.encode({}, 'x' * 32, algorithm='HS256').decode()
+        self.write(tpl_script.format(authorization=rsp.text, jwt=token))
 
 
 app = tornado.web.Application([

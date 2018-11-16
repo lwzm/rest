@@ -74,6 +74,10 @@ App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
         const idKey = PKS[what]
 
+        const jwt = localStorage.getItem("jwt")
+        if (jwt) {
+            headers["Authorization"] = `Bearer ${jwt}`
+        }
         switch (operation) {
             case 'post':
                 if (element[idKey] == null) {
