@@ -166,9 +166,11 @@ handlers = [
 app = tornado.web.Application(handlers)
 
 
+if not __debug__:
+    sentry()
+
+
 if __name__ == '__main__':
-    if not __debug__:
-        sentry()
     from tornado.options import define, parse_command_line, options
     define("port", default=18000)
     define("addr", default="")
@@ -177,6 +179,5 @@ if __name__ == '__main__':
     from tornado.ioloop import IOLoop
     IOLoop.current().start()
 else:
-    sentry()
     from tornado.wsgi import WSGIAdapter
     application = WSGIAdapter(app)

@@ -40,7 +40,10 @@ class Api(Handler):
         access_token = result.get("access_token")
         if not access_token:
             raise tornado.web.HTTPError(403)
-        self.write(tpl_script.format(authorization=result))
+        rsp = ss.get("https://api.github.com/user", headers={
+            "Authorization": f"token {access_token}",
+        })
+        self.write(tpl_script.format(authorization=rsp.text))
 
 
 app = tornado.web.Application([
