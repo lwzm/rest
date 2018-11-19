@@ -173,26 +173,29 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
 
     const authUrl = 'https://github.com/login/oauth/authorize?client_id=7d1cb3569f4ff9cb6781'
     const authorization = localStorage.getItem("authorization")
+    let title = "___"
+
     if (authorization) {
         const authInfo = JSON.parse(authorization)
-        const admin = nga.application(authInfo.login)
-            .baseApiUrl("/api/")
-            .debug(false)
-
-        nga.configure(admin)
-        admin.dashboard(nga.dashboard())
-
-        init(nga, admin)
-
-        window.admin = admin
-        window._patch_todos = new Set()
-        setTimeout(() => {
-            const navbar = document.querySelector('.navbar-header .navbar-brand')
-            navbar.href = authUrl
-        }, 30)
-    } else {
-        document.location = authUrl
+        title = authInfo.login
     }
+
+    const admin = nga.application(title)
+        .baseApiUrl("/api/")
+        .debug(false)
+
+    nga.configure(admin)
+    admin.dashboard(nga.dashboard())
+
+    init(nga, admin)
+
+    window.admin = admin
+    window._patch_todos = new Set()
+
+    setTimeout(() => {
+        const navbar = document.querySelector('.navbar-header .navbar-brand')
+        navbar.href = authUrl
+    }, 30)
 
 }])
 
