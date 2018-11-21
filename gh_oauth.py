@@ -7,6 +7,10 @@ import jwt
 import requests
 import tornado.web
 
+"""
+export GITHUB_CLIENT_ID=xxxxxxxxxxxxxxxxxxxx
+export GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+"""
 
 client_id = os.environ["GITHUB_CLIENT_ID"]
 client_secret = os.environ["GITHUB_CLIENT_SECRET"]
