@@ -20,7 +20,16 @@ create table api.price (
 \q
 
 
-
+create or replace function auth() returns void as $$
+begin
+    if current_setting('request.jwt.claim.test', true) = 'x'
+        then
+        raise insufficient_privilege
+        using hint = 'Nope, we are on to you';
+    end if;
+end
+$$ language plpgsql;
+\q
 
 
 drop table _meta;
