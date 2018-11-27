@@ -30,6 +30,8 @@ price:
 
 user:
     displayForFk: name
+    ts:
+        readonly: true
     avatar:
         template: <img width=48 height=48 src='{{ value }}' >
     source:
@@ -52,3 +54,8 @@ video:
             </video>
     source:
         hide: true
+
+
+keyword:
+    ts:
+        readonly: true
