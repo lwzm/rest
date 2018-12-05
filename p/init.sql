@@ -5,9 +5,10 @@ create table "user" (
     id serial primary key,
     name varchar(32) not null,
     email varchar(64),
-    comment text,
+    vip integer default 0,
     alarm boolean,
     flag boolean,
+    comment text,
     ts timestamp with time zone default current_timestamp
 );
 
@@ -19,6 +20,7 @@ create table keyword (
     level integer default 0,
     pages integer default 1,
     years text,
+    match_mode varchar(64),
     comment text,
     ts timestamp with time zone default current_timestamp
 );
