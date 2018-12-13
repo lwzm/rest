@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime, date
-from pony_rest import BaseEntity, start, make_application
+from pony_rest import BaseEntity, start, make_app
 
 from pony.orm import (
     PrimaryKey,
@@ -41,4 +41,4 @@ class Test(BaseEntity):
 if __name__ == '__main__':
     start(18000)
 else:
-    application = make_application()
+    application = make_app()
