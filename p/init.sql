@@ -13,7 +13,7 @@ create table "user" (
 );
 
 create table keyword (
-    id serial primary key,
+    id bigserial primary key,
     "user" integer references "user" (id) not null,
     text varchar(256) not null,
     factor real default 0.0,
