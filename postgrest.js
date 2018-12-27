@@ -50,6 +50,10 @@ App.config(["RestangularProvider", (rest) => {
                 } else {
                     response.totalCount = cache[cache._] = n
                 }
+                if (!PKS[what]) {
+                    const dummy = +new Date()
+                    data.map((it, idx) => it.id || (it.id = dummy + idx))
+                }
                 break
             case 'post':
                 for (const k in cache) {
