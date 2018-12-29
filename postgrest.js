@@ -78,10 +78,6 @@ App.config(["RestangularProvider", (rest) => {
     rest.addFullRequestInterceptor((element, operation, what, url, headers, params, httpConfig) => {
         const idKey = PKS[what]
 
-        const jwt = localStorage.getItem("jwt")
-        if (jwt) {
-            headers["Authorization"] = `Bearer ${jwt}`
-        }
         switch (operation) {
             case 'post':
                 if (element[idKey] == null) {
@@ -175,16 +171,16 @@ App.config(["RestangularProvider", (rest) => {
 App.config(["NgAdminConfigurationProvider", (nga) => {
     // create an admin application
 
-    const authUrl = 'https://github.com/login/oauth/authorize?client_id=7d1cb3569f4ff9cb6781'
-    const authorization = localStorage.getItem("authorization")
-    let title = "___"
+    //const authUrl = 'https://github.com/login/oauth/authorize?client_id=7d1cb3569f4ff9cb6781'
+    //const authorization = localStorage.getItem("authorization")
+    //let title = "___"
 
-    if (authorization) {
-        const authInfo = JSON.parse(authorization)
-        title = authInfo.login
-    }
+    //if (authorization) {
+        //const authInfo = JSON.parse(authorization)
+        //title = authInfo.login
+    //}
 
-    const admin = nga.application(title)
+    const admin = nga.application("todo")
         .baseApiUrl("/api/")
         .debug(false)
 
@@ -196,10 +192,10 @@ App.config(["NgAdminConfigurationProvider", (nga) => {
     window.admin = admin
     window._patch_todos = new Set()
 
-    setTimeout(() => {
-        const navbar = document.querySelector('.navbar-header .navbar-brand')
-        navbar.href = authUrl
-    }, 30)
+    //setTimeout(() => {
+        //const navbar = document.querySelector('.navbar-header .navbar-brand')
+        //navbar.href = authUrl
+    //}, 30)
 
 }])
 
