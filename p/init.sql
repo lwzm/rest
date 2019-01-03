@@ -9,7 +9,7 @@ create table "user" (
     alarm boolean,
     flag boolean,
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 
 create table keyword (
@@ -22,7 +22,7 @@ create table keyword (
     years text,
     match_mode varchar(64),
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 
 

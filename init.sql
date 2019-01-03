@@ -5,7 +5,7 @@ create table api.item (
     id serial primary key,
     name varchar(32) unique not null,
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 
 create table api.price (
@@ -15,7 +15,7 @@ create table api.price (
     unit varchar(8) not null,
     unique(item, unit),
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 \q
 
@@ -103,7 +103,7 @@ create table api.item (
     id serial primary key,
     name varchar(32) unique not null,
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 
 create table api.price (
@@ -113,7 +113,7 @@ create table api.price (
     unit varchar(8) not null,
     unique(item, unit),
     comment text,
-    ts timestamp with time zone default current_timestamp
+    ts timestamp with time zone default now()
 );
 
 grant all on api.item to web_anon;
