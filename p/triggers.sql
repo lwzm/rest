@@ -4,14 +4,16 @@ drop function update_user_flag; -- cascade;
 create or replace function update_user_flag() returns trigger
 language plpgsql
 as $$
+declare
+row record;
 begin
     if (TG_OP = 'DELETE') then
-        update "user" set flag = true where id = OLD.user;
-        return OLD;
+        row := OLD;
     else
-        update "user" set flag = true where id = NEW.user;
-        return NEW;
+        row := NEW;
     end if;
+    update "user" set flag = true where id = row.user;
+    return row;
 end
 $$;
 
