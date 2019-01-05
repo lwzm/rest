@@ -1,5 +1,6 @@
 drop trigger update_user_flag on keyword;
-drop function update_user_flag; -- cascade;
+drop trigger ts on keyword;
+-- drop function update_user_flag; -- cascade;
 
 create or replace function update_user_flag() returns trigger
 language plpgsql
@@ -23,3 +24,20 @@ on keyword
 for each row
     execute procedure
     update_user_flag();
+
+
+create or replace function set_ts_now() returns trigger
+language plpgsql
+as $$
+begin
+    NEW.ts = now();
+    return NEW;
+end
+$$;
+
+create trigger ts
+before update
+on keyword
+for each row
+    execute procedure
+    set_ts_now();

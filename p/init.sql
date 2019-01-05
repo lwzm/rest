@@ -1,3 +1,5 @@
+\q
+
 drop table keyword;
 drop table "user";
 
