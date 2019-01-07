@@ -46,7 +46,7 @@ def main():
         tablePatch = patch.get(tableName, {})
         properties = definitions[tableName].get("properties", [])
         fs = []
-        pk = None
+        pk = []
         for columnName in properties:
             attrs = properties[columnName]
             desc = attrs.get("description", "")
@@ -58,7 +58,7 @@ def main():
                     "columnName": c,
                 }
             if ".<pk" in desc:
-                pk = columnName
+                pk.append(columnName)
             o = {
                 "columnName": columnName,
             }
@@ -68,6 +68,8 @@ def main():
                 o["type"] = columnFormatMap.get(attrs["format"], "string")
             o.update(tablePatch.pop(columnName, {}))
             fs.append(o)
+
+        pk = pk[0] if len(pk) == 1 else None  # composite primary key is not supported currently
 
         t = {
             "tableName": tableName,
