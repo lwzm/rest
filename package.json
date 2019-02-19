@@ -1,12 +1,13 @@
 {
     "dependencies": {
-        "lodash": "^4"
+        "lodash": "latest"
     },
     "devDependencies": {
-        "babel-plugin-transform-runtime": "^6",
-        "babel-preset-env": "^1.6.1",
-        "babel-preset-stage-0": "^6",
-        "parcel-bundler": "^1.7"
+        "babel-core": "latest",
+        "babel-plugin-transform-runtime": "latest",
+        "babel-preset-env": "latest",
+        "babel-preset-stage-0": "latest",
+        "parcel-bundler": "latest"
     },
     "scripts": {
         "build": "parcel build index.html --public-url ./",
