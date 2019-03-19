@@ -6,7 +6,7 @@ import sys
 import requests
 
 
-def export(api="http://localhost:18000/-1"):
+def export(api="http://localhost:18000/"):
     rsp = requests.get(api)
     print("export default ", json.dumps(rsp.json(),  indent=4, ensure_ascii=False))
 
